@@ -1,0 +1,20 @@
+window {
+    background-color: #2f4858;
+    color: #FFFFFF;
+}
+
+button {
+    background-color: #ed6b21;
+    border: none;
+    border-radius: 10px;
+}
+
+button:active {
+  background-color: #b74b86;
+  border-left: 2px solid #42537c;
+  border-top: 2px solid #42537c;
+}
+
+/*
+https://mycolor.space/?hex=%23ED6B21&sub=1
+*/
