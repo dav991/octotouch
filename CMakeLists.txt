@@ -1,8 +1,8 @@
 cmake_minimum_required (VERSION 2.6)
 project (octolcd)
 
-set (OctoLcd_VERSION_MAJOR 1)
-set (OctoLcd_VERSION_MINOR 0)
+set (Octotouch_VERSION_MAJOR 1)
+set (Octotouch_VERSION_MINOR 0)
 
 FIND_PACKAGE(PkgConfig REQUIRED)
 #PKG_CHECK_MODULES(GTK3 REQUIRED gtk+-3.0)
@@ -22,14 +22,15 @@ configure_file (
 
 set(src
     src/main
-    src/MainActivity)
+    src/MainActivity
+    src/Activity)
 
 include_directories (
     inc/
     ${CMAKE_CURRENT_BINARY_DIR}/generatedheaders
 )
 
-file(COPY "${PROJECT_SOURCE_DIR}/glade/ui.glade" DESTINATION "${PROJECT_BINARY_DIR}/glade/")
+file(COPY "${PROJECT_SOURCE_DIR}/glade/mainWindow.glade" DESTINATION "${PROJECT_BINARY_DIR}/glade/")
 file(COPY "${PROJECT_SOURCE_DIR}/css/style.css" DESTINATION "${PROJECT_BINARY_DIR}/css/")
 add_executable(octolcd ${src} )
 #target_link_libraries(octolcd PUBLIC ${GTK3_LIBRARIES})

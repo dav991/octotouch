@@ -9,13 +9,15 @@ class MainActivity: Activity
 {
 private:
     Gtk::Window *window;
+    Gtk::Label *appName;
 public:
-    MainActivity( Glib::RefPtr<Gtk::Builder> builder );
+    MainActivity();
     void show();
     void hide();
     int start(Glib::RefPtr< Gtk::Application > app);
     void childActivityHidden( Activity *child );
     void windowDestroyed();
+    ~MainActivity();
 };
 
 #endif

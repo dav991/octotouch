@@ -7,8 +7,6 @@ int main(int argc, char *argv[])
     auto app = Gtk::Application::create(argc, argv,
       "com.intshift.octolcd");
 
-    Glib::RefPtr<Gtk::Builder> builder = Gtk::Builder::create_from_file("glade/ui.glade");
-
     Glib::RefPtr<Gtk::CssProvider> cssProvider = Gtk::CssProvider::create();
 	cssProvider->load_from_path("css/style.css");
 
@@ -18,7 +16,7 @@ int main(int argc, char *argv[])
 
     styleContext->add_provider_for_screen(screen, cssProvider, GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
 
-    auto ma = new MainActivity(builder);
+    auto ma = new MainActivity();
     int ret = ma->start(app);
     delete ma;
     return ret;

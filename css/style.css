@@ -4,15 +4,20 @@
 }
 
 .btn {
+    box-shadow: none;
+    text-shadow: none;
+    padding: 0;
+    margin: 7px;
+    border: none;
+    background-image: none;
     background-color: #ed6b21;
     border: none;
     border-radius: 10px;
+    color: #FFFFFF;
 }
 
 .btn:active {
-  background-color: #b74b86;
-  border-left: 2px solid #42537c;
-  border-top: 2px solid #42537c;
+  background-color: #e34b5f;
 }
 
 /*
