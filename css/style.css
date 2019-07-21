@@ -14,12 +14,34 @@
     border: none;
     border-radius: 10px;
     color: #FFFFFF;
+    font-size: 100%;
 }
 
 .btn:active {
   background-color: #e34b5f;
 }
 
+.progressBar {
+    color: #FFFFFF;
+}
+
+.progressBar progress{
+    background-color: #ed6b21;
+}
+
+.lbl {
+    font-size: 200%;
+}
+.lbl-small {
+    font-size: 100%;
+}
+
+.thin-border {
+    border: 1px solid #ed6b21;
+    border-radius: 5px;
+    margin-left: 7px;
+    margin-right: 7px;
+}
 /*
 https://mycolor.space/?hex=%23ED6B21&sub=1
 */

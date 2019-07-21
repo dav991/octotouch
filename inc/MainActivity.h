@@ -4,19 +4,26 @@
 #include <gtkmm.h>
 #include "Activity.h"
 #include "Version.h"
+#include "StatusActivity.h"
 
-class MainActivity: Activity
+class MainActivity: public Activity
 {
 private:
     Gtk::Window *window;
-    Gtk::Label *appName;
+    Gtk::Label *lblAppName;
+    Gtk::Button *btnStatus;
+// Child activities
+    Activity *statusActivity;
+// App reference
+    Glib::RefPtr< Gtk::Application > app;
 public:
-    MainActivity();
+    MainActivity( Glib::RefPtr< Gtk::Application > app );
     void show();
     void hide();
-    int start(Glib::RefPtr< Gtk::Application > app);
+    int start();
     void childActivityHidden( Activity *child );
-    void windowDestroyed();
+    bool windowDestroyed( GdkEventAny* any_event );
+    void statusClicked();
     ~MainActivity();
 };
 

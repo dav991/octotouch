@@ -112,6 +112,9 @@
             <property name="visible">True</property>
             <property name="can_focus">False</property>
             <property name="label" translatable="yes">OctoTouch</property>
+            <style>
+              <class name="lbl"/>
+            </style>
           </object>
           <packing>
             <property name="left_attach">0</property>

@@ -1,14 +1,21 @@
 #include "MainActivity.h"
 
-MainActivity::MainActivity(): window(nullptr)
+MainActivity::MainActivity( Glib::RefPtr< Gtk::Application > app ): window(nullptr)
 {
-    Glib::RefPtr<Gtk::Builder> builder = Gtk::Builder::create_from_file("glade/mainWindow.glade");
-    builder->get_widget("windowMain", window);
-    builder->get_widget("lblAppName", appName);
-    if( nullptr != appName )
-    {
-        appName->set_text( Glib::ustring::compose("%1 %2.%3", appName->get_text(), Octotouch_VERSION_MAJOR, Octotouch_VERSION_MINOR) );
-    }
+    this->app = app;
+    app->hold();
+    statusActivity = new StatusActivity(this);
+    Glib::RefPtr<Gtk::Builder> builder = Gtk::Builder::create_from_file( Config::i()->getResourcesFolder() + "glade/mainWindow.glade" );
+    builder->get_widget( "windowMain", window );
+    builder->get_widget( "lblAppName", lblAppName );
+    builder->get_widget( "btnStatus", btnStatus );
+    if( !validWidget( window, "windowMain missing from mainWindow.glade" ) ) return;
+    if( !validWidget( lblAppName, "lblAppName missing from mainWindow.glade" ) ) return;
+    if( !validWidget( btnStatus, "btnStatus missing from mainWindow.glade" ) ) return;
+    window->signal_delete_event().connect( sigc::mem_fun( this, &MainActivity::windowDestroyed ) );
+    window->set_default_size( Config::i()->getDisplayWidth(), Config::i()->getDisplayHeight() );
+    lblAppName->set_text( Glib::ustring::compose("%1 %2.%3", lblAppName->get_text(), Octotouch_VERSION_MAJOR, Octotouch_VERSION_MINOR) );
+    btnStatus->signal_clicked().connect( sigc::mem_fun( this, &MainActivity::statusClicked ) );
 }
 
 void MainActivity::show()
@@ -21,21 +28,31 @@ void MainActivity::hide()
     window->hide();
 }
 
-int MainActivity::start(Glib::RefPtr< Gtk::Application > app)
+int MainActivity::start()
 {
     app->run(*window);
 }
 
 void MainActivity::childActivityHidden( Activity *child )
 {
+    this->show();
 }
 
-void MainActivity::windowDestroyed()
+bool MainActivity::windowDestroyed( GdkEventAny* any_event )
 {
+    this->hide();
+    app->release();
+    return true;
+}
 
+void MainActivity::statusClicked()
+{
+    this->hide();
+    this->statusActivity->show();
 }
 
 MainActivity::~MainActivity()
 {
     delete window;
+    delete statusActivity;
 }
