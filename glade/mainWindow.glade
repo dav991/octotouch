@@ -7,15 +7,15 @@
     <property name="can_focus">False</property>
     <property name="stock">gtk-directory</property>
   </object>
+  <object class="GtkImage" id="moveImage">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <property name="stock">gtk-select-all</property>
+  </object>
   <object class="GtkImage" id="statusImage">
     <property name="visible">True</property>
     <property name="can_focus">False</property>
     <property name="stock">gtk-info</property>
-  </object>
-  <object class="GtkImage" id="tempImage">
-    <property name="visible">True</property>
-    <property name="can_focus">False</property>
-    <property name="stock">gtk-color-picker</property>
   </object>
   <object class="GtkImage" id="webcamImage">
     <property name="visible">True</property>
@@ -72,12 +72,12 @@
           </packing>
         </child>
         <child>
-          <object class="GtkButton" id="btnTemp">
-            <property name="label" translatable="yes">Temp</property>
+          <object class="GtkButton" id="btnMove">
+            <property name="label" translatable="yes">Move</property>
             <property name="visible">True</property>
             <property name="can_focus">True</property>
             <property name="receives_default">True</property>
-            <property name="image">tempImage</property>
+            <property name="image">moveImage</property>
             <property name="relief">none</property>
             <property name="always_show_image">True</property>
             <style>

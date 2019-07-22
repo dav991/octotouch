@@ -47,9 +47,20 @@ int main(int argc, char *argv[])
     Glib::RefPtr<Gdk::Screen> screen = Gdk::Screen::get_default();
 
     styleContext->add_provider_for_screen(screen, cssProvider, GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
-
-    auto ma = new MainActivity(app);
-    int ret = ma->start();
-    delete ma;
+    MainActivity *ma = nullptr;
+    int ret = 3;
+    try
+    {
+      ma = new MainActivity(app);
+      ret = ma->start();
+    }
+    catch(std::exception& e)
+    {
+      std::cerr << "Exception: " << e.what() << std::endl;
+    }
+    if( ma != nullptr)
+    {
+      delete ma;
+    }
     return ret;
 }

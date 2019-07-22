@@ -7,6 +7,7 @@
 #include <cstdlib>
 #include <string>
 #include <libconfig.h++>
+#include <exception>
 #include "MainActivity.h"
 #include "Config.h"
 

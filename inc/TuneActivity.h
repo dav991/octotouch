@@ -5,7 +5,7 @@
 #include <gtkmm.h>
 #include <iomanip>
 #include <vector>
-#include "cpprest/http_client.h"
+#include <cpprest/http_client.h>
 #include "Activity.h"
 #include "Config.h"
 
@@ -33,8 +33,8 @@ private:
     int incrementValue;
     int toolTargetValue;
     int bedTargetValue;
-    int flowrate;
-    int feedrate;
+    int flowRate;
+    int feedRate;
     void refreshData();
     sigc::connection periodicTaskConnection;
     void requestToolTarget();

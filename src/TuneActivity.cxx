@@ -7,8 +7,8 @@ TuneActivity::TuneActivity(Activity *parent):
     incrementValue(0),
     toolTargetValue(0),
     bedTargetValue(0),
-    flowrate(100),
-    feedrate(100)
+    flowRate(100),
+    feedRate(100)
 {
     this->parent = parent;
     Glib::RefPtr<Gtk::Builder> builder = Gtk::Builder::create_from_file( Config::i()->getResourcesFolder() + "glade/tuneWindow.glade" );
@@ -206,7 +206,7 @@ void TuneActivity::decrementToolTemp()
 void TuneActivity::incrementToolTemp()
 {
     // TODO maybe make this limit configurable?
-    if( (toolTargetValue + incrementValue) > 270 )
+    if( (toolTargetValue + incrementValue) > 285 )
     {
         return ;
     }
@@ -319,33 +319,119 @@ void TuneActivity::requestBedTarget()
 
 void TuneActivity::decrementFlow()
 {
-
+    if( flowRate <= 75 )
+    {
+        return ;
+    }
+    --flowRate;
+    requestFlowRate();
 }
 
 void TuneActivity::incrementFlow()
 {
-
+    if( flowRate >= 125 )
+    {
+        return ;
+    }
+    ++flowRate;
+    requestFlowRate();
 }
 
 void TuneActivity::requestFlowRate()
 {
-
+    utility::string_t address = U(Config::i()->getHost());
+    web::http::uri uri = web::http::uri(address);
+    web::http::client::http_client api(web::http::uri_builder(uri).append_path(U("api/printer/tool")).to_uri());
+    web::json::value requestBody = web::json::value::object();
+    requestBody[U("command")] = web::json::value::string("flowrate");
+    requestBody[U("factor")] = web::json::value::number(flowRate);
+    utility::stringstream_t stream;
+    requestBody.serialize(stream);
+    web::http::http_request request(web::http::methods::POST);
+    request.set_body(stream.str(), utf8string("application/json"));
+    request.headers().add(U("X-Api-Key"), U(Config::i()->getApiKey()));
+    api.request(request)
+        .then([=](web::http::http_response response)
+        {
+            if(response.status_code() < 200 || response.status_code() > 299)
+            {
+                lblStatus->set_text( Glib::ustring::compose( "Error: %1\n%2", response.status_code(), response.reason_phrase() ) );
+                return;
+            }
+            lblFlow->set_text( Glib::ustring::compose( "%1%%", flowRate ) );
+        })
+        .then([=] (pplx::task<void> previous_task) mutable {
+            if (previous_task._GetImpl()->_HasUserException()) {
+                try {
+                    auto holder = previous_task._GetImpl()->_GetExceptionHolder();
+                    holder->_RethrowUserException();
+                } catch (std::exception& e) {
+                    lblStatus->set_text(
+                        Glib::ustring::compose( "Error: %1", e.what())
+                    );
+                    std::cerr << "Exception: " << e.what() << std::endl;
+                }
+            }
+        });
 }
 
 void TuneActivity::decrementFeed()
 {
-
+    if( feedRate <= 50 )
+    {
+        return;
+    }
+    --feedRate;
+    requestFeedRate();
 }
 
 void TuneActivity::incrementFeed()
 {
-
+    if( feedRate >= 200 )
+    {
+        return;
+    }
+    ++feedRate;
+    requestFeedRate();
 }
 
 
 void TuneActivity::requestFeedRate()
 {
-
+    utility::string_t address = U(Config::i()->getHost());
+    web::http::uri uri = web::http::uri(address);
+    web::http::client::http_client api(web::http::uri_builder(uri).append_path(U("api/printer/printhead")).to_uri());
+    web::json::value requestBody = web::json::value::object();
+    requestBody[U("command")] = web::json::value::string("feedrate");
+    requestBody[U("factor")] = web::json::value::number(feedRate);
+    utility::stringstream_t stream;
+    requestBody.serialize(stream);
+    web::http::http_request request(web::http::methods::POST);
+    request.set_body(stream.str(), utf8string("application/json"));
+    request.headers().add(U("X-Api-Key"), U(Config::i()->getApiKey()));
+    api.request(request)
+        .then([=](web::http::http_response response)
+        {
+            if(response.status_code() < 200 || response.status_code() > 299)
+            {
+                lblStatus->set_text( Glib::ustring::compose( "Error: %1\n%2", response.status_code(), response.reason_phrase() ) );
+                return;
+            }
+            lblFeed->set_text( Glib::ustring::compose( "%1%%", feedRate ) );
+        })
+        .then([=] (pplx::task<void> previous_task) mutable {
+            if (previous_task._GetImpl()->_HasUserException()) {
+                try {
+                    auto holder = previous_task._GetImpl()->_GetExceptionHolder();
+                    holder->_RethrowUserException();
+                } catch (std::exception& e) {
+                    lblStatus->set_text(
+                        Glib::ustring::compose( "Error: %1", e.what())
+                    );
+                    std::cerr << "Exception: " << e.what() << std::endl;
+                }
+            }
+        });
 }
 
 void TuneActivity::cooldown()
@@ -378,7 +464,6 @@ void TuneActivity::loadFilament()
                 lblStatus->set_text(Glib::ustring::compose("Error: %1\n%2", response.status_code(), response.reason_phrase()));
                 return;
             }
-            refreshData();
         })
         .then([=] (pplx::task<void> previous_task) mutable {
 			if (previous_task._GetImpl()->_HasUserException()) {
@@ -417,7 +502,6 @@ void TuneActivity::unloadFilament()
                 lblStatus->set_text(Glib::ustring::compose("Error: %1\n%2", response.status_code(), response.reason_phrase()));
                 return;
             }
-            refreshData();
         })
         .then([=] (pplx::task<void> previous_task) mutable {
 			if (previous_task._GetImpl()->_HasUserException()) {
@@ -456,7 +540,6 @@ void TuneActivity::swapFilament()
                 lblStatus->set_text(Glib::ustring::compose("Error: %1\n%2", response.status_code(), response.reason_phrase()));
                 return;
             }
-            refreshData();
         })
         .then([=] (pplx::task<void> previous_task) mutable {
 			if (previous_task._GetImpl()->_HasUserException()) {
