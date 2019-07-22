@@ -22,6 +22,11 @@
     <property name="can_focus">False</property>
     <property name="stock">gtk-media-play</property>
   </object>
+  <object class="GtkImage" id="imageStop">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <property name="stock">gtk-media-stop</property>
+  </object>
   <object class="GtkWindow" id="windowStatus">
     <property name="can_focus">False</property>
     <property name="default_width">480</property>
@@ -55,7 +60,11 @@
           <object class="GtkLabel" id="lblStatus">
             <property name="visible">True</property>
             <property name="can_focus">False</property>
-            <property name="label" translatable="yes">Status</property>
+            <property name="label" translatable="yes">Loading...</property>
+            <property name="wrap">True</property>
+            <property name="wrap_mode">char</property>
+            <property name="ellipsize">end</property>
+            <property name="lines">4</property>
             <style>
               <class name="lbl"/>
             </style>
@@ -233,10 +242,5 @@
     <style>
       <class name="activity"/>
     </style>
-  </object>
-  <object class="GtkImage" id="imageStop">
-    <property name="visible">True</property>
-    <property name="can_focus">False</property>
-    <property name="stock">gtk-media-stop</property>
   </object>
 </interface>

@@ -57,87 +57,101 @@ void StatusActivity::refreshData()
     web::http::client::http_client api(web::http::uri_builder(uri).append_path(U("api/job")).to_uri());
     web::http::http_request request(web::http::methods::GET);
     request.headers().add(U("X-Api-Key"), U(Config::i()->getApiKey()));
-    api.request(request).then(
-        [=](web::http::http_response  response)
-        {
-            if( response.status_code() < 200 || response.status_code() > 299 )
-            {
-                lblStatus->set_text(
-                    Glib::ustring::compose( "Connection error: %1\n%2", response.status_code(), response.reason_phrase())
-                );
-                return;
-            }
-            auto json = response.extract_json().get();
-            //lblFile update
-            if( json["job"]["file"]["name"].is_null() )
-            {
-                lblFile->set_text( "File not selected" );
-            }
-            else
-            {
-                lblFile->set_text(json["job"]["file"]["name"].as_string());
-            }
-            //lblStatus update
-            if( json["state"].is_null() )
-            {
-                lblStatus->set_text( "Error retriving status" );
-            }
-            else
-            {
-                lblStatus->set_text( Glib::ustring::compose( "Status: %1", json["state"].as_string() ) );
-            }
-            
-            //lblPrintTime update
-            int printTime = 0;
-            if( json["progress"]["printTime"].is_null() )
-            {
-                lblPrintTime->set_text("Time: -:--");
-            }
-            else
-            {
-                printTime = json["progress"]["printTime"].as_integer();
-                lblPrintTime->set_text(Glib::ustring::compose("Time: %1:%2",
-                    printTime/3600,
-                    Glib::ustring::format(std::setfill(L'0'), std::setw(2), (printTime%3600)/60) ) );
-            }
-            //lblPrintTimeLeft update
-            int printTimeLeft = 0;
-            if( json["progress"]["printTimeLeft"].is_null() )
-            {
-                lblPrintTimeLeft->set_text("Left: -:--");
-            }
-            else
-            {
-                printTimeLeft = json["progress"]["printTimeLeft"].as_integer();
-                lblPrintTimeLeft->set_text(Glib::ustring::compose("Left: %1:%2",
-                    printTimeLeft/3600,
-                    Glib::ustring::format(std::setfill(L'0'), std::setw(2), (printTimeLeft%3600)/60) ) );
-            }
-            //lblPrintTimeTotal update
-            int printTimeTotal = printTime + printTimeLeft;
-            if( printTimeTotal == 0)
-            {
-                lblEstimatePrintTime->set_text( "Total: -:--" );
-            }
-            else
-            {
-                lblEstimatePrintTime->set_text( Glib::ustring::compose( "Total: %1:%2",
-                    printTimeTotal/3600,
-                    Glib::ustring::format( std::setfill(L'0'), std::setw(2), (printTimeTotal%3600)/60) ) );
-            }
-            //progressFile update
-            if( printTimeTotal == 0 )
-            {
-                progressFile->set_fraction( 0. );
-                progressFile->set_text( "0.00%" );
-            }
-            else
-            {
-                double progressFileFraction = (double)printTime/(double)printTimeTotal*100.;
-                progressFile->set_fraction( progressFileFraction/100 );
-                progressFile->set_text( Glib::ustring::compose("%1%%", round( progressFileFraction*100.)/100. ) );
-            }
-        });
+    api.request(request)
+		.then(
+		[=](web::http::http_response  response)
+		{
+			if( response.status_code() < 200 || response.status_code() > 299 )
+			{
+				lblStatus->set_text(
+					Glib::ustring::compose( "Connection error: %1\n%2", response.status_code(), response.reason_phrase())
+				);
+				return;
+			}
+			auto json = response.extract_json().get();
+			//lblFile update
+			if( json["job"]["file"]["name"].is_null() )
+			{
+				lblFile->set_text( "File not selected" );
+			}
+			else
+			{
+				lblFile->set_text(json["job"]["file"]["name"].as_string());
+			}
+			//lblStatus update
+			if( json["state"].is_null() )
+			{
+				lblStatus->set_text( "Error retriving status" );
+			}
+			else
+			{
+				lblStatus->set_text( Glib::ustring::compose( "Status: %1", json["state"].as_string() ) );
+			}
+			
+			//lblPrintTime update
+			int printTime = 0;
+			if( json["progress"]["printTime"].is_null() )
+			{
+				lblPrintTime->set_text("Time: -:--");
+			}
+			else
+			{
+				printTime = json["progress"]["printTime"].as_integer();
+				lblPrintTime->set_text(Glib::ustring::compose("Time: %1:%2",
+					printTime/3600,
+					Glib::ustring::format(std::setfill(L'0'), std::setw(2), (printTime%3600)/60) ) );
+			}
+			//lblPrintTimeLeft update
+			int printTimeLeft = 0;
+			if( json["progress"]["printTimeLeft"].is_null() )
+			{
+				lblPrintTimeLeft->set_text("Left: -:--");
+			}
+			else
+			{
+				printTimeLeft = json["progress"]["printTimeLeft"].as_integer();
+				lblPrintTimeLeft->set_text(Glib::ustring::compose("Left: %1:%2",
+					printTimeLeft/3600,
+					Glib::ustring::format(std::setfill(L'0'), std::setw(2), (printTimeLeft%3600)/60) ) );
+			}
+			//lblPrintTimeTotal update
+			int printTimeTotal = printTime + printTimeLeft;
+			if( printTimeTotal == 0)
+			{
+				lblEstimatePrintTime->set_text( "Total: -:--" );
+			}
+			else
+			{
+				lblEstimatePrintTime->set_text( Glib::ustring::compose( "Total: %1:%2",
+					printTimeTotal/3600,
+					Glib::ustring::format( std::setfill(L'0'), std::setw(2), (printTimeTotal%3600)/60) ) );
+			}
+			//progressFile update
+			if( printTimeTotal == 0 )
+			{
+				progressFile->set_fraction( 0. );
+				progressFile->set_text( "0.00%" );
+			}
+			else
+			{
+				double progressFileFraction = (double)printTime/(double)printTimeTotal*100.;
+				progressFile->set_fraction( progressFileFraction/100 );
+				progressFile->set_text( Glib::ustring::compose("%1%%", round( progressFileFraction*100.)/100. ) );
+			}
+		})
+		.then([=] (pplx::task<void> previous_task) mutable {
+			if (previous_task._GetImpl()->_HasUserException()) {
+				try {
+					auto holder = previous_task._GetImpl()->_GetExceptionHolder();
+					holder->_RethrowUserException();
+				} catch (std::exception& e) {
+					lblStatus->set_text(
+						Glib::ustring::compose( "Error: %1", e.what())
+					);
+					std::cerr << "Exception: " << e.what() << std::endl;
+				}
+			}
+		});
 }
 
 void StatusActivity::hide()
@@ -181,7 +195,8 @@ void StatusActivity::startPrint()
     web::http::http_request request(web::http::methods::POST);
     request.set_body(stream.str(), utf8string("application/json"));
     request.headers().add(U("X-Api-Key"), U(Config::i()->getApiKey()));
-    api.request(request).then([=](web::http::http_response response)
+    api.request(request)
+		.then([=](web::http::http_response response)
         {
             if(response.status_code() < 200 || response.status_code() > 299)
             {
@@ -189,7 +204,20 @@ void StatusActivity::startPrint()
                 return;
             }
             refreshData();
-        });
+        })
+        .then([=] (pplx::task<void> previous_task) mutable {
+			if (previous_task._GetImpl()->_HasUserException()) {
+				try {
+					auto holder = previous_task._GetImpl()->_GetExceptionHolder();
+					holder->_RethrowUserException();
+				} catch (std::exception& e) {
+					lblStatus->set_text(
+						Glib::ustring::compose( "Error: %1", e.what())
+					);
+					std::cerr << "Exception: " << e.what() << std::endl;
+				}
+			}
+		});
 }
 
 void StatusActivity::pausePrint()
@@ -213,7 +241,20 @@ void StatusActivity::pausePrint()
                 return;
             }
             refreshData();
-        });
+        })
+        .then([=] (pplx::task<void> previous_task) mutable {
+			if (previous_task._GetImpl()->_HasUserException()) {
+				try {
+					auto holder = previous_task._GetImpl()->_GetExceptionHolder();
+					holder->_RethrowUserException();
+				} catch (std::exception& e) {
+					lblStatus->set_text(
+						Glib::ustring::compose( "Error: %1", e.what())
+					);
+					std::cerr << "Exception: " << e.what() << std::endl;
+				}
+			}
+		});
 }
 
 void StatusActivity::stopPrint()
@@ -236,7 +277,20 @@ void StatusActivity::stopPrint()
                 return;
             }
             refreshData();
-        });
+        })
+        .then([=] (pplx::task<void> previous_task) mutable {
+			if (previous_task._GetImpl()->_HasUserException()) {
+				try {
+					auto holder = previous_task._GetImpl()->_GetExceptionHolder();
+					holder->_RethrowUserException();
+				} catch (std::exception& e) {
+					lblStatus->set_text(
+						Glib::ustring::compose( "Error: %1", e.what())
+					);
+					std::cerr << "Exception: " << e.what() << std::endl;
+				}
+			}
+		});
 }
 
 void StatusActivity::tunePrint()

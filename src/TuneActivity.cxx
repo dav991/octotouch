@@ -78,8 +78,8 @@ void TuneActivity::refreshData()
     web::http::client::http_client api(web::http::uri_builder(uri).append_path(U("api/printer")).to_uri());
     web::http::http_request request(web::http::methods::GET);
     request.headers().add(U("X-Api-Key"), U(Config::i()->getApiKey()));
-    api.request(request).then(
-        [=](web::http::http_response  response)
+    api.request(request)
+		.then([=](web::http::http_response  response)
         {
             if( response.status_code() < 200 || response.status_code() > 299 )
             {
@@ -126,7 +126,20 @@ void TuneActivity::refreshData()
                     )
                 );
             }
-        });
+        })
+        .then([=] (pplx::task<void> previous_task) mutable {
+			if (previous_task._GetImpl()->_HasUserException()) {
+				try {
+					auto holder = previous_task._GetImpl()->_GetExceptionHolder();
+					holder->_RethrowUserException();
+				} catch (std::exception& e) {
+					lblStatus->set_text(
+						Glib::ustring::compose( "Error: %1", e.what())
+					);
+					std::cerr << "Exception: " << e.what() << std::endl;
+				}
+			}
+		});
 }
 
 void TuneActivity::hide()
@@ -216,7 +229,8 @@ void TuneActivity::requestToolTarget()
     web::http::http_request request(web::http::methods::POST);
     request.set_body(stream.str(), utf8string("application/json"));
     request.headers().add(U("X-Api-Key"), U(Config::i()->getApiKey()));
-    api.request(request).then([=](web::http::http_response response)
+    api.request(request)
+		.then([=](web::http::http_response response)
         {
             if(response.status_code() < 200 || response.status_code() > 299)
             {
@@ -224,7 +238,20 @@ void TuneActivity::requestToolTarget()
                 return;
             }
             refreshData();
-        });
+        })
+        .then([=] (pplx::task<void> previous_task) mutable {
+			if (previous_task._GetImpl()->_HasUserException()) {
+				try {
+					auto holder = previous_task._GetImpl()->_GetExceptionHolder();
+					holder->_RethrowUserException();
+				} catch (std::exception& e) {
+					lblStatus->set_text(
+						Glib::ustring::compose( "Error: %1", e.what())
+					);
+					std::cerr << "Exception: " << e.what() << std::endl;
+				}
+			}
+		});
 }
 
 void TuneActivity::decrementBedTemp()
@@ -265,7 +292,8 @@ void TuneActivity::requestBedTarget()
     web::http::http_request request(web::http::methods::POST);
     request.set_body(stream.str(), utf8string("application/json"));
     request.headers().add(U("X-Api-Key"), U(Config::i()->getApiKey()));
-    api.request(request).then([=](web::http::http_response response)
+    api.request(request)
+		.then([=](web::http::http_response response)
         {
             if(response.status_code() < 200 || response.status_code() > 299)
             {
@@ -273,7 +301,20 @@ void TuneActivity::requestBedTarget()
                 return;
             }
             refreshData();
-        });
+        })
+        .then([=] (pplx::task<void> previous_task) mutable {
+			if (previous_task._GetImpl()->_HasUserException()) {
+				try {
+					auto holder = previous_task._GetImpl()->_GetExceptionHolder();
+					holder->_RethrowUserException();
+				} catch (std::exception& e) {
+					lblStatus->set_text(
+						Glib::ustring::compose( "Error: %1", e.what())
+					);
+					std::cerr << "Exception: " << e.what() << std::endl;
+				}
+			}
+		});
 }
 
 void TuneActivity::decrementFlow()
@@ -329,7 +370,8 @@ void TuneActivity::loadFilament()
     web::http::http_request request(web::http::methods::POST);
     request.set_body(stream.str(), utf8string("application/json"));
     request.headers().add(U("X-Api-Key"), U(Config::i()->getApiKey()));
-    api.request(request).then([=](web::http::http_response response)
+    api.request(request)
+		.then([=](web::http::http_response response)
         {
             if(response.status_code() < 200 || response.status_code() > 299)
             {
@@ -337,7 +379,20 @@ void TuneActivity::loadFilament()
                 return;
             }
             refreshData();
-        });
+        })
+        .then([=] (pplx::task<void> previous_task) mutable {
+			if (previous_task._GetImpl()->_HasUserException()) {
+				try {
+					auto holder = previous_task._GetImpl()->_GetExceptionHolder();
+					holder->_RethrowUserException();
+				} catch (std::exception& e) {
+					lblStatus->set_text(
+						Glib::ustring::compose( "Error: %1", e.what())
+					);
+					std::cerr << "Exception: " << e.what() << std::endl;
+				}
+			}
+		});
 }
 
 void TuneActivity::unloadFilament()
@@ -354,7 +409,8 @@ void TuneActivity::unloadFilament()
     web::http::http_request request(web::http::methods::POST);
     request.set_body(stream.str(), utf8string("application/json"));
     request.headers().add(U("X-Api-Key"), U(Config::i()->getApiKey()));
-    api.request(request).then([=](web::http::http_response response)
+    api.request(request)
+		.then([=](web::http::http_response response)
         {
             if(response.status_code() < 200 || response.status_code() > 299)
             {
@@ -362,7 +418,20 @@ void TuneActivity::unloadFilament()
                 return;
             }
             refreshData();
-        });
+        })
+        .then([=] (pplx::task<void> previous_task) mutable {
+			if (previous_task._GetImpl()->_HasUserException()) {
+				try {
+					auto holder = previous_task._GetImpl()->_GetExceptionHolder();
+					holder->_RethrowUserException();
+				} catch (std::exception& e) {
+					lblStatus->set_text(
+						Glib::ustring::compose( "Error: %1", e.what())
+					);
+					std::cerr << "Exception: " << e.what() << std::endl;
+				}
+			}
+		});
 }
 
 void TuneActivity::swapFilament()
@@ -379,7 +448,8 @@ void TuneActivity::swapFilament()
     web::http::http_request request(web::http::methods::POST);
     request.set_body(stream.str(), utf8string("application/json"));
     request.headers().add(U("X-Api-Key"), U(Config::i()->getApiKey()));
-    api.request(request).then([=](web::http::http_response response)
+    api.request(request)
+		.then([=](web::http::http_response response)
         {
             if(response.status_code() < 200 || response.status_code() > 299)
             {
@@ -387,7 +457,20 @@ void TuneActivity::swapFilament()
                 return;
             }
             refreshData();
-        });
+        })
+        .then([=] (pplx::task<void> previous_task) mutable {
+			if (previous_task._GetImpl()->_HasUserException()) {
+				try {
+					auto holder = previous_task._GetImpl()->_GetExceptionHolder();
+					holder->_RethrowUserException();
+				} catch (std::exception& e) {
+					lblStatus->set_text(
+						Glib::ustring::compose( "Error: %1", e.what())
+					);
+					std::cerr << "Exception: " << e.what() << std::endl;
+				}
+			}
+		});
 }
 
 TuneActivity::~TuneActivity()
