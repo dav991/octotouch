@@ -64,7 +64,7 @@
             <property name="wrap">True</property>
             <property name="wrap_mode">char</property>
             <property name="ellipsize">end</property>
-            <property name="lines">4</property>
+            <property name="lines">3</property>
             <style>
               <class name="lbl"/>
             </style>
