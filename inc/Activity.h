@@ -7,6 +7,8 @@
 
 class Activity
 {
+protected:
+    Activity *parent;
 public:
     virtual void childActivityHidden(Activity *child) = 0;
     virtual void show() = 0;
@@ -14,6 +16,7 @@ public:
     virtual bool windowDestroyed( GdkEventAny* any_event ) = 0;
     virtual ~Activity() = 0;
     bool validWidget(Gtk::Widget *widget, std::string hint);
+    virtual void notify( std::string notification, std::string value );
 };
 
 

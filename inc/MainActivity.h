@@ -33,6 +33,7 @@ public:
     void webcamClicked();
     void filesClicked();
     ~MainActivity();
+    void notify( std::string notification, std::string value );
 };
 
 #endif

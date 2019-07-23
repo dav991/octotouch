@@ -13,7 +13,6 @@ class WebcamActivity: public Activity
 private:
     Gtk::Window *window;
     Gtk::Button *btnBack;
-    Activity *parent;
 public:
     WebcamActivity(Activity *parent);
     void show();

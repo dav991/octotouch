@@ -14,7 +14,6 @@ private:
     Gtk::Window *window;
     Gtk::Button *btnBack;
     Gtk::ListBox *listBoxFiles;
-    Activity *parent;
 public:
     FilesActivity(Activity *parent);
     void show();
@@ -22,6 +21,8 @@ public:
     void childActivityHidden( Activity *child );
     bool windowDestroyed( GdkEventAny* any_event );
     void backClicked();
+    void clearList();
+    void addItemToList( std::string text );
     ~FilesActivity();
 };
 

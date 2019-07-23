@@ -29,7 +29,6 @@ private:
     Gtk::Label *lblFlow;
     Gtk::Label *lblFeed;
     Gtk::Label *lblStatus;
-    Activity *parent;
     int incrementValue;
     int toolTargetValue;
     int bedTargetValue;

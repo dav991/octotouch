@@ -71,6 +71,14 @@ void MainActivity::filesClicked()
 	this->filesActivity->show();
 }
 
+void MainActivity::notify( std::string notification, std::string value )
+{
+    if( notification.compare("file_selected") == 0 )
+    {
+        this->filesActivity->show();
+    }
+}
+
 MainActivity::~MainActivity()
 {
     delete window;

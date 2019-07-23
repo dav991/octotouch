@@ -14,7 +14,6 @@ class StatusActivity: public Activity
 private:
     Gtk::Window *window;
     Gtk::Button *btnBack;
-    Activity *parent;
     Gtk::Label *lblStatus;
     Gtk::Label *lblFile;
     Gtk::Label *lblPrintTime;
