@@ -1,4 +1,5 @@
-.activity {
+.activity,
+.list {
     background-color: #2f4858;
     color: #FFFFFF;
 }
@@ -41,6 +42,11 @@
     border-radius: 5px;
     margin-left: 7px;
     margin-right: 7px;
+}
+
+.listItem {
+	min-height: 50px;
+	
 }
 /*
 https://mycolor.space/?hex=%23ED6B21&sub=1

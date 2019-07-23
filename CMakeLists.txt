@@ -44,6 +44,7 @@ set(src
     src/StatusActivity
     src/TuneActivity
     src/WebcamActivity
+    src/FilesActivity
     )
 
 include_directories (
@@ -58,6 +59,7 @@ file(COPY "${PROJECT_SOURCE_DIR}/glade/mainWindow.glade" DESTINATION "${PROJECT_
 file(COPY "${PROJECT_SOURCE_DIR}/glade/statusWindow.glade" DESTINATION "${PROJECT_BINARY_DIR}/glade/")
 file(COPY "${PROJECT_SOURCE_DIR}/glade/tuneWindow.glade" DESTINATION "${PROJECT_BINARY_DIR}/glade/")
 file(COPY "${PROJECT_SOURCE_DIR}/glade/webcamWindow.glade" DESTINATION "${PROJECT_BINARY_DIR}/glade/")
+file(COPY "${PROJECT_SOURCE_DIR}/glade/filesWindow.glade" DESTINATION "${PROJECT_BINARY_DIR}/glade/")
 file(COPY "${PROJECT_SOURCE_DIR}/css/style.css" DESTINATION "${PROJECT_BINARY_DIR}/css/")
 file(COPY "${PROJECT_SOURCE_DIR}/octotouch.cfg" DESTINATION "${PROJECT_BINARY_DIR}/")
 add_executable(octotouch ${src})

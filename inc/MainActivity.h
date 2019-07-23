@@ -6,6 +6,7 @@
 #include "Version.h"
 #include "StatusActivity.h"
 #include "WebcamActivity.h"
+#include "FilesActivity.h"
 
 class MainActivity: public Activity
 {
@@ -14,9 +15,11 @@ private:
     Gtk::Label *lblAppName;
     Gtk::Button *btnStatus;
     Gtk::Button *btnWebcam;
+    Gtk::Button *btnFiles;
 // Child activities
     Activity *statusActivity;
     Activity *webcamActivity;
+    Activity *filesActivity;
 // App reference
     Glib::RefPtr< Gtk::Application > app;
 public:
@@ -28,6 +31,7 @@ public:
     bool windowDestroyed( GdkEventAny* any_event );
     void statusClicked();
     void webcamClicked();
+    void filesClicked();
     ~MainActivity();
 };
 
