@@ -22,7 +22,8 @@ public:
     bool windowDestroyed( GdkEventAny* any_event );
     void backClicked();
     void clearList();
-    void addItemToList( std::string text );
+    void addItemToList( std::string text, std::string data );
+    void listItemClicked( std::string data );
     ~FilesActivity();
 };
 

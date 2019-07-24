@@ -22,9 +22,13 @@ FilesActivity::FilesActivity(Activity *parent):
 
 void FilesActivity::show()
 {
-    addItemToList( "test1" );
-    addItemToList( "test2" );
-    listBoxFiles->show_all_children();
+    for( int i=0; i<20; ++i )
+    {
+        addItemToList( 
+            Glib::ustring::compose( "Button: %1", i),
+            Glib::ustring::compose( "Button: %1 data", i)
+        );
+    }
     window->show();
 }
 
@@ -60,12 +64,19 @@ void FilesActivity::clearList()
     }
 }
 
-void FilesActivity::addItemToList( std::string text )
+void FilesActivity::addItemToList( std::string text, std::string data )
 {
     auto button = Gtk::manage( new Gtk::Button( text ) );
     button->get_style_context()->add_class("btn");
     button->get_style_context()->add_class("listItem");
+    button->signal_clicked().connect( sigc::bind<std::string>( sigc::mem_fun( *this, &FilesActivity::listItemClicked), data ) );
+    button->show();
     listBoxFiles->append( *button );
+}
+
+void FilesActivity::listItemClicked( std::string data )
+{
+    std::cout << "FilesActivity::" << __func__ << " data: " << data << std::endl;
 }
 
 FilesActivity::~FilesActivity()
