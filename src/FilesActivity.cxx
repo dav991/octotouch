@@ -3,7 +3,8 @@
 
 
 FilesActivity::FilesActivity(Activity *parent): 
-    window(nullptr)
+    window(nullptr),
+    showStatusDispatcher()
 {
     this->parent = parent;
     statusActivity = new StatusActivity(this);
@@ -21,6 +22,7 @@ FilesActivity::FilesActivity(Activity *parent):
     window->signal_delete_event().connect (sigc::mem_fun(this, &FilesActivity::windowDestroyed) );
     window->set_default_size( Config::i()->getDisplayWidth(), Config::i()->getDisplayHeight() );
     btnBack->signal_clicked().connect( sigc::mem_fun(this, &FilesActivity::backClicked) );
+    showStatusDispatcher.connect( sigc::mem_fun( this, &FilesActivity::switchToStatus ) );
 }
 
 void FilesActivity::show()
@@ -78,7 +80,44 @@ void FilesActivity::addItemToList( FileEntry entry )
 
 void FilesActivity::listItemClicked( std::string data )
 {
-    std::cout << "FilesActivity::" << __func__ << " data: " << data << std::endl;
+    utility::string_t address = U(Config::i()->getHost());
+    web::http::uri uri = web::http::uri(address);
+    web::http::client::http_client api(web::http::uri_builder(uri).append_path(U("api/files/")).append_path(U(data)).to_uri());
+    web::json::value requestBody = web::json::value::object();
+    requestBody[U("command")] = web::json::value::string("select");
+    requestBody[U("print")] = web::json::value::boolean(false);
+    utility::stringstream_t stream;
+    requestBody.serialize(stream);
+    web::http::http_request request(web::http::methods::POST);
+    request.set_body(stream.str(), utf8string("application/json"));
+    request.headers().add(U("X-Api-Key"), U(Config::i()->getApiKey()));
+    api.request(request)
+        .then([=](web::http::http_response response)
+        {
+            if(response.status_code() < 200 || response.status_code() > 299)
+            {
+                lblStatus->set_text(Glib::ustring::compose("Error: %1\n%2", response.status_code(), response.reason_phrase()));
+                return;
+            }
+            showStatusDispatcher.emit();
+        })
+        .then([=] (pplx::task<void> previous_task) mutable {
+            if (previous_task._GetImpl()->_HasUserException()) {
+                try {
+                    auto holder = previous_task._GetImpl()->_GetExceptionHolder();
+                    holder->_RethrowUserException();
+                } catch (std::exception& e) {
+                    lblStatus->set_text(
+                        Glib::ustring::compose( "Error: %1", e.what())
+                    );
+                    std::cerr << "Exception: " << e.what() << std::endl;
+                }
+            }
+        });
+}
+
+void FilesActivity::switchToStatus()
+{
     hide();
     statusActivity->show();
 }
@@ -116,7 +155,13 @@ void FilesActivity::parseFiles( web::json::value array)
             {
                 continue;
             }
-            insertInOrder( FileEntry(array[i]["path"].as_string(), array[i]["path"].as_string(), array[i]["date"].as_number().to_int64() ) );
+            insertInOrder( 
+                FileEntry( 
+                    array[i]["path"].as_string(),
+                    Glib::ustring::compose( "%1/%2", array[i]["origin"].as_string(), array[i]["path"].as_string()),
+                    array[i]["date"].as_number().to_int64()
+                )
+            );
         }
         else if( !array[i]["type"].is_null() && array[i]["type"].as_string().compare("folder") == 0)
         {

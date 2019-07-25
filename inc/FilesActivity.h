@@ -26,10 +26,12 @@ private:
     Gtk::ListBox *listBoxFiles;
     Gtk::Label *lblStatus;
     Activity *statusActivity;
+    Glib::Dispatcher showStatusDispatcher;
+    std::vector<FileEntry> files;
     void refreshData();
     void parseFiles( web::json::value files);
-    std::vector<FileEntry> files;
     void insertInOrder(FileEntry entry);
+    void switchToStatus();
 public:
     FilesActivity(Activity *parent);
     void show();
