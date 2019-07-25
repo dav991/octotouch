@@ -45,6 +45,7 @@ set(src
     src/TuneActivity
     src/WebcamActivity
     src/FilesActivity
+    src/MoveActivity
     )
 
 include_directories (
@@ -60,8 +61,11 @@ file(COPY "${PROJECT_SOURCE_DIR}/glade/statusWindow.glade" DESTINATION "${PROJEC
 file(COPY "${PROJECT_SOURCE_DIR}/glade/tuneWindow.glade" DESTINATION "${PROJECT_BINARY_DIR}/glade/")
 file(COPY "${PROJECT_SOURCE_DIR}/glade/webcamWindow.glade" DESTINATION "${PROJECT_BINARY_DIR}/glade/")
 file(COPY "${PROJECT_SOURCE_DIR}/glade/filesWindow.glade" DESTINATION "${PROJECT_BINARY_DIR}/glade/")
+file(COPY "${PROJECT_SOURCE_DIR}/glade/moveWindow.glade" DESTINATION "${PROJECT_BINARY_DIR}/glade/")
 file(COPY "${PROJECT_SOURCE_DIR}/css/style.css" DESTINATION "${PROJECT_BINARY_DIR}/css/")
 file(COPY "${PROJECT_SOURCE_DIR}/octotouch.cfg" DESTINATION "${PROJECT_BINARY_DIR}/")
+file(COPY "${PROJECT_SOURCE_DIR}/start_xinit.sh" DESTINATION "${PROJECT_BINARY_DIR}/"
+	FILE_PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
 add_executable(octotouch ${src})
 
 target_link_libraries(octotouch ${GTKMM_LIBRARIES})

@@ -7,6 +7,7 @@
 #include "StatusActivity.h"
 #include "WebcamActivity.h"
 #include "FilesActivity.h"
+#include "MoveActivity.h"
 
 class MainActivity: public Activity
 {
@@ -16,10 +17,12 @@ private:
     Gtk::Button *btnStatus;
     Gtk::Button *btnWebcam;
     Gtk::Button *btnFiles;
+    Gtk::Button *btnMove;
 // Child activities
     Activity *statusActivity;
     Activity *webcamActivity;
     Activity *filesActivity;
+    Activity *moveActivity;
 // App reference
     Glib::RefPtr< Gtk::Application > app;
 public:
@@ -32,8 +35,8 @@ public:
     void statusClicked();
     void webcamClicked();
     void filesClicked();
+    void moveClicked();
     ~MainActivity();
-    void notify( std::string notification, std::string value );
 };
 
 #endif
