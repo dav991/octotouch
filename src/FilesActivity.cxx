@@ -96,7 +96,9 @@ void FilesActivity::listItemClicked( std::string data )
         {
             if(response.status_code() < 200 || response.status_code() > 299)
             {
-                lblStatus->set_text(Glib::ustring::compose("Error: %1\n%2", response.status_code(), response.reason_phrase()));
+                std::cerr << "FilesActivity::listItemClicked error: " << 
+                    Glib::ustring::compose("Error: %1\n%2", response.status_code(), response.reason_phrase()) << std::endl;
+                //lblStatus->set_text(Glib::ustring::compose("Error: %1\n%2", response.status_code(), response.reason_phrase()));
                 return;
             }
             showStatusDispatcher.emit();
@@ -107,9 +109,9 @@ void FilesActivity::listItemClicked( std::string data )
                     auto holder = previous_task._GetImpl()->_GetExceptionHolder();
                     holder->_RethrowUserException();
                 } catch (std::exception& e) {
-                    lblStatus->set_text(
+                    /*lblStatus->set_text(
                         Glib::ustring::compose( "Error: %1", e.what())
-                    );
+                    );*/
                     std::cerr << "Exception: " << e.what() << std::endl;
                 }
             }
@@ -190,9 +192,11 @@ void FilesActivity::refreshData()
         {
             if( response.status_code() < 200 || response.status_code() > 299 )
             {
-                lblStatus->set_text(
+                std::cerr << "FilesActivity::listItemClicked error: " << 
+                    Glib::ustring::compose("Error: %1\n%2", response.status_code(), response.reason_phrase()) << std::endl;
+                /*lblStatus->set_text(
                     Glib::ustring::compose( "Connection error: %1\n%2", response.status_code(), response.reason_phrase())
-                );
+                );*/
                 return;
             }
             auto json = response.extract_json().get();
@@ -211,9 +215,9 @@ void FilesActivity::refreshData()
                     auto holder = previous_task._GetImpl()->_GetExceptionHolder();
                     holder->_RethrowUserException();
                 } catch (std::exception& e) {
-                    lblStatus->set_text(
+                    /*lblStatus->set_text(
                         Glib::ustring::compose( "Error: %1", e.what())
-                    );
+                    );*/
                     std::cerr << "Exception: " << e.what() << std::endl;
                 }
             }
