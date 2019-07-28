@@ -21,13 +21,20 @@ public:
 class FilesActivity: public Activity
 {
 private:
+    int scrollWindowStart;
+    int scrollItems;
     Gtk::Window *window;
     Gtk::Button *btnBack;
-    Gtk::ListBox *listBoxFiles;
     Gtk::Label *lblStatus;
+    Gtk::Grid *gridListWrapper;
     Activity *statusActivity;
     Glib::Dispatcher showStatusDispatcher;
+    Glib::Dispatcher populateListDispatcher;
     std::vector<FileEntry> files;
+    std::vector<Gtk::Label *> listLabels;
+    Gtk::Button *btnScrollUp;
+    Gtk::Button *btnScrollDown;
+    Gtk::Button *btnScrollTop;
     void refreshData();
     void parseFiles( web::json::value files);
     void insertInOrder(FileEntry entry);
@@ -41,8 +48,10 @@ public:
     void backClicked();
     void clearList();
     void populateList();
-    void addItemToList( FileEntry entry );
-    void listItemClicked( std::string data );
+    bool listItemClicked( GdkEventButton* button_event, int element );
+    void onScrollUp();
+    void onScrollDown();
+    void onScrollTop();
     ~FilesActivity();
 };
 

@@ -17,6 +17,7 @@
     border-radius: 10px;
     color: #FFFFFF;
     font-size: 100%;
+    min-width: 50px;
 }
 
 .btn:active {

@@ -4,25 +4,51 @@
 
 FilesActivity::FilesActivity(Activity *parent): 
     window(nullptr),
-    showStatusDispatcher()
+    showStatusDispatcher(),
+    scrollWindowStart(0)
 {
     this->parent = parent;
     statusActivity = new StatusActivity(this);
     Glib::RefPtr<Gtk::Builder> builder = Gtk::Builder::create_from_file( Config::i()->getResourcesFolder() + "glade/filesWindow.glade" );
     builder->get_widget( "windowFiles", window );
     builder->get_widget( "btnBack", btnBack );
-    builder->get_widget( "listBoxFiles", listBoxFiles);
-    builder->get_widget( "lblStatus", lblStatus);
+    builder->get_widget( "lblStatus", lblStatus );
+    builder->get_widget( "gridListWrapper", gridListWrapper );
+    builder->get_widget( "btnScrollUp", btnScrollUp);
+    builder->get_widget( "btnScrollDown", btnScrollDown);
+    builder->get_widget( "btnScrollTop", btnScrollTop);
 
     if( !validWidget( window, "windowFiles missing from filesWindow.glade" ) ) return;
     if( !validWidget( btnBack, "btnBack missing from filesWindow.glade" ) ) return;
-    if( !validWidget( listBoxFiles, "listBoxFiles missing from filesWindow.glade" ) ) return;
     if( !validWidget( lblStatus, "lblStatus missing from filesWindow.glade" ) ) return;
+    if( !validWidget( gridListWrapper, "gridListWrapper missing from filesWindow.glade" ) ) return;
+    if( !validWidget( btnScrollUp, "btnScrollUp missing from filesWindow.glade" ) ) return;
+    if( !validWidget( btnScrollDown, "btnScrollDown missing from filesWindow.glade" ) ) return;
+    if( !validWidget( btnScrollTop, "btnScrollTop missing from filesWindow.glade" ) ) return;
 
     window->signal_delete_event().connect (sigc::mem_fun(this, &FilesActivity::windowDestroyed) );
     window->set_default_size( Config::i()->getDisplayWidth(), Config::i()->getDisplayHeight() );
     btnBack->signal_clicked().connect( sigc::mem_fun(this, &FilesActivity::backClicked) );
     showStatusDispatcher.connect( sigc::mem_fun( this, &FilesActivity::switchToStatus ) );
+    populateListDispatcher.connect( sigc::mem_fun( this, &FilesActivity::populateList ) );
+    btnScrollUp->signal_clicked().connect( sigc::mem_fun( this, &FilesActivity::onScrollUp ) );
+    btnScrollDown->signal_clicked().connect( sigc::mem_fun( this, &FilesActivity::onScrollDown ) );
+    btnScrollTop->signal_clicked().connect( sigc::mem_fun( this, &FilesActivity::onScrollTop ) );
+
+    std::vector<Gtk::Widget*> children = gridListWrapper->get_children();
+    int i = 0;
+    scrollItems = children.size();
+    for( auto it = children.begin(); it!= children.end(); it++ )
+    {
+        auto box = dynamic_cast<Gtk::EventBox *>(*it);
+        auto label = dynamic_cast<Gtk::Label *>(box->get_child ());
+        listLabels.insert( listLabels.begin(), label );
+        box->signal_button_press_event ().connect( 
+            sigc::bind<int>( sigc::mem_fun( this, &FilesActivity::listItemClicked ),  scrollItems - i - 1) 
+        );
+        ++i;
+    }
+    
 }
 
 void FilesActivity::show()
@@ -56,30 +82,16 @@ void FilesActivity::backClicked()
 
 void FilesActivity::clearList()
 {
-    std::vector<Gtk::Widget*> children = listBoxFiles->get_children();
-    for( auto it = children.begin(); it!= children.end(); it++ )
-    {
-        listBoxFiles->remove(**it);
-    }
     files.clear();
 }
 
-void FilesActivity::addItemToList( FileEntry entry )
+bool FilesActivity::listItemClicked( GdkEventButton* button_event, int element )
 {
-    auto button = Gtk::manage( new Gtk::Button( entry.name ) );
-    Gtk::Label *btnLabel = dynamic_cast< Gtk::Label *>(button->get_child());
-    btnLabel->set_lines(-1);
-    btnLabel->set_line_wrap(true);
-    btnLabel->set_line_wrap_mode(Pango::WrapMode::WRAP_WORD_CHAR);
-    button->get_style_context()->add_class("btn");
-    button->get_style_context()->add_class("listItem");
-    button->signal_clicked().connect( sigc::bind<std::string>( sigc::mem_fun( *this, &FilesActivity::listItemClicked), entry.path ) );
-    button->show();
-    listBoxFiles->append( *button );
-}
-
-void FilesActivity::listItemClicked( std::string data )
-{
+    if( (scrollWindowStart + element) >= files.size()  )
+    {
+        return true;
+    }
+    std::string data = files[scrollWindowStart + element].path;
     utility::string_t address = U(Config::i()->getHost());
     web::http::uri uri = web::http::uri(address);
     web::http::client::http_client api(web::http::uri_builder(uri).append_path(U("api/files/")).append_path(U(data)).to_uri());
@@ -116,6 +128,7 @@ void FilesActivity::listItemClicked( std::string data )
                 }
             }
         });
+    return true;
 }
 
 void FilesActivity::switchToStatus()
@@ -130,13 +143,18 @@ void FilesActivity::insertInOrder(FileEntry entry)
     {
         files.push_back(entry);
     }
-    for( int i = 0; i < files.size(); ++i )
+    int i;
+    for( i = 0; i < files.size(); ++i )
     {
         if( files[i].timestamp < entry.timestamp )
         {
             files.insert( files.begin()+i, entry );
             break;
         }
+    }
+    if( i == files.size() )
+    {
+        files.push_back(entry);
     }
 }
 
@@ -174,9 +192,18 @@ void FilesActivity::parseFiles( web::json::value array)
 
 void FilesActivity::populateList()
 {
-    for( auto it = files.begin(); it != files.end(); ++it )
+    for( int i = 0; i < scrollItems; ++i)
     {
-        addItemToList( *it );
+        if( scrollWindowStart + i < files.size() )
+        {
+            listLabels[i]->set_text(
+                Glib::ustring::compose( "%1) %2", scrollWindowStart + i + 1, files[scrollWindowStart + i].path)
+            );
+        }
+        else
+        {
+            listLabels[i]->set_text("--");
+        }
     }
 }
 
@@ -200,14 +227,9 @@ void FilesActivity::refreshData()
                 return;
             }
             auto json = response.extract_json().get();
-            if( json["files"].is_null() )
-            {
-                lblStatus->set_text( "Files cannot be retrieved" );
-                return;
-            }
-            files.reserve( json["files"].size() );
             parseFiles( json["files"] );
-            populateList();
+            scrollWindowStart = 0;
+            populateListDispatcher.emit();
         })
         .then([=] (pplx::task<void> previous_task) mutable {
             if (previous_task._GetImpl()->_HasUserException()) {
@@ -223,6 +245,33 @@ void FilesActivity::refreshData()
             }
         });
 }
+
+void FilesActivity::onScrollUp()
+{
+    if( scrollWindowStart <= 0)
+    {
+        return;
+    }
+    --scrollWindowStart;
+    populateList();
+}
+
+void FilesActivity::onScrollDown()
+{
+    if( (scrollWindowStart + scrollItems) > files.size() )
+    {
+        return;
+    }
+    ++scrollWindowStart;
+    populateList();
+}
+
+void FilesActivity::onScrollTop()
+{
+    scrollWindowStart = 0;
+    populateList();
+}
+
 
 FilesActivity::~FilesActivity()
 {
