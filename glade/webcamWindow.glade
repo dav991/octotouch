@@ -37,7 +37,7 @@
           </packing>
         </child>
         <child>
-          <object class="GtkImage">
+          <object class="GtkImage" id="imageFrame">
             <property name="visible">True</property>
             <property name="can_focus">False</property>
             <property name="stock">gtk-fullscreen</property>

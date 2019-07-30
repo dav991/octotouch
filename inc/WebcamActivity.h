@@ -13,6 +13,7 @@ class WebcamActivity: public Activity
 private:
     Gtk::Window *window;
     Gtk::Button *btnBack;
+    Gtk::Image *imageFrame;
 public:
     WebcamActivity(Activity *parent);
     void show();
@@ -20,6 +21,7 @@ public:
     void childActivityHidden( Activity *child );
     bool windowDestroyed( GdkEventAny* any_event );
     void backClicked();
+    void loadFrame();
     ~WebcamActivity();
 };
 
