@@ -40,6 +40,9 @@ private:
     void requestBedTarget();
     void requestFlowRate();
     void requestFeedRate();
+    Glib::Dispatcher statusDispatcher;
+    std::string errorStatus;
+    std::mutex errorStatusMutex;
 public:
     TuneActivity(Activity *parent);
     void show();
@@ -61,6 +64,7 @@ public:
     void loadFilament();
     void unloadFilament();
     void swapFilament();
+    void errorStatusUpdate();
     ~TuneActivity();
 };
 

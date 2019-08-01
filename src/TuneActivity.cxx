@@ -46,7 +46,7 @@ TuneActivity::TuneActivity(Activity *parent):
     if( !validWidget( lblToolTemp, "lblToolTemp missing from tuneWindow.glade" ) ) return;
     if( !validWidget( lblFlow, "lblFlow missing from tuneWindow.glade" ) ) return;
     if( !validWidget( lblFeed, "lblFeed missing from tuneWindow.glade" ) ) return;
-     if( !validWidget( lblStatus, "lblStatus missing from tuneWindow.glade" ) ) return;
+    if( !validWidget( lblStatus, "lblStatus missing from tuneWindow.glade" ) ) return;
 
     window->signal_delete_event().connect( sigc::mem_fun( this, &TuneActivity::windowDestroyed ) );
     window->set_default_size( Config::i()->getDisplayWidth(), Config::i()->getDisplayHeight() );
@@ -61,6 +61,7 @@ TuneActivity::TuneActivity(Activity *parent):
     btnDecreaseFlow->signal_clicked().connect( sigc::mem_fun( this, &TuneActivity::decrementFlow) );
     btnIncreaseFeed->signal_clicked().connect( sigc::mem_fun( this, &TuneActivity::incrementFeed) );
     btnDecreaseFeed->signal_clicked().connect( sigc::mem_fun( this, &TuneActivity::decrementFeed) );
+    statusDispatcher.connect( sigc::mem_fun( this, &TuneActivity::errorStatusUpdate ) );
     switchIncrement();
 }
 
@@ -89,6 +90,9 @@ void TuneActivity::refreshData()
                     << " and message: "
                     << response.reason_phrase()
                     << std::endl;
+                std::lock_guard<std::mutex> lock( errorStatusMutex );
+                errorStatus = Glib::ustring::compose("Error: %1\n%2", response.status_code(), response.reason_phrase());
+                statusDispatcher.emit();
                 return;
             }
             auto json = response.extract_json().get();
@@ -133,9 +137,9 @@ void TuneActivity::refreshData()
 					auto holder = previous_task._GetImpl()->_GetExceptionHolder();
 					holder->_RethrowUserException();
 				} catch (std::exception& e) {
-					lblStatus->set_text(
-						Glib::ustring::compose( "Error: %1", e.what())
-					);
+					std::lock_guard<std::mutex> lock( errorStatusMutex );
+                    errorStatus = Glib::ustring::compose( "Error: %1", e.what());
+                    statusDispatcher.emit();
 					std::cerr << "Exception: " << e.what() << std::endl;
 				}
 			}
@@ -234,7 +238,9 @@ void TuneActivity::requestToolTarget()
         {
             if(response.status_code() < 200 || response.status_code() > 299)
             {
-                lblStatus->set_text(Glib::ustring::compose("Error: %1\n%2", response.status_code(), response.reason_phrase()));
+                std::lock_guard<std::mutex> lock( errorStatusMutex );
+                errorStatus = Glib::ustring::compose("Error: %1\n%2", response.status_code(), response.reason_phrase());
+                statusDispatcher.emit();
                 return;
             }
             refreshData();
@@ -245,9 +251,9 @@ void TuneActivity::requestToolTarget()
 					auto holder = previous_task._GetImpl()->_GetExceptionHolder();
 					holder->_RethrowUserException();
 				} catch (std::exception& e) {
-					lblStatus->set_text(
-						Glib::ustring::compose( "Error: %1", e.what())
-					);
+					std::lock_guard<std::mutex> lock( errorStatusMutex );
+                    errorStatus = Glib::ustring::compose( "Error: %1", e.what());
+                    statusDispatcher.emit();
 					std::cerr << "Exception: " << e.what() << std::endl;
 				}
 			}
@@ -256,26 +262,22 @@ void TuneActivity::requestToolTarget()
 
 void TuneActivity::decrementBedTemp()
 {
-    std::cout << "TuneActivity::" << __func__ << "(): current bedTargetValue:" << bedTargetValue << std::endl;
     if( bedTargetValue < incrementValue )
     {
         return;
     }
     bedTargetValue -= incrementValue;
-    std::cout << "TuneActivity::" << __func__ << "(): new bedTargetValue:" << bedTargetValue << std::endl;
     requestBedTarget();
 }
 
 void TuneActivity::incrementBedTemp()
 {
-    std::cout << "TuneActivity::" << __func__ << "(): current bedTargetValue:" << bedTargetValue << std::endl;
     // TODO maybe make this limit configurable?
     if( (bedTargetValue + incrementValue) > 110 )
     {
         return ;
     }
     bedTargetValue += incrementValue;
-    std::cout << "TuneActivity::" << __func__ << "(): new bedTargetValue:" << bedTargetValue << std::endl;
     requestBedTarget();
 }
 
@@ -297,7 +299,9 @@ void TuneActivity::requestBedTarget()
         {
             if(response.status_code() < 200 || response.status_code() > 299)
             {
-                lblStatus->set_text(Glib::ustring::compose("Error: %1\n%2", response.status_code(), response.reason_phrase()));
+                std::lock_guard<std::mutex> lock( errorStatusMutex );
+                errorStatus = Glib::ustring::compose("Error: %1\n%2", response.status_code(), response.reason_phrase());
+                statusDispatcher.emit();
                 return;
             }
             refreshData();
@@ -308,9 +312,9 @@ void TuneActivity::requestBedTarget()
 					auto holder = previous_task._GetImpl()->_GetExceptionHolder();
 					holder->_RethrowUserException();
 				} catch (std::exception& e) {
-					lblStatus->set_text(
-						Glib::ustring::compose( "Error: %1", e.what())
-					);
+					std::lock_guard<std::mutex> lock( errorStatusMutex );
+                    errorStatus = Glib::ustring::compose( "Error: %1", e.what());
+                    statusDispatcher.emit();
 					std::cerr << "Exception: " << e.what() << std::endl;
 				}
 			}
@@ -355,7 +359,9 @@ void TuneActivity::requestFlowRate()
         {
             if(response.status_code() < 200 || response.status_code() > 299)
             {
-                lblStatus->set_text( Glib::ustring::compose( "Error: %1\n%2", response.status_code(), response.reason_phrase() ) );
+                std::lock_guard<std::mutex> lock( errorStatusMutex );
+                errorStatus = Glib::ustring::compose( "Error: %1\n%2", response.status_code(), response.reason_phrase() );
+                statusDispatcher.emit();
                 return;
             }
             lblFlow->set_text( Glib::ustring::compose( "%1%%", flowRate ) );
@@ -366,9 +372,9 @@ void TuneActivity::requestFlowRate()
                     auto holder = previous_task._GetImpl()->_GetExceptionHolder();
                     holder->_RethrowUserException();
                 } catch (std::exception& e) {
-                    lblStatus->set_text(
-                        Glib::ustring::compose( "Error: %1", e.what())
-                    );
+                    std::lock_guard<std::mutex> lock( errorStatusMutex );
+                    errorStatus = Glib::ustring::compose( "Error: %1", e.what());
+                    statusDispatcher.emit();
                     std::cerr << "Exception: " << e.what() << std::endl;
                 }
             }
@@ -414,7 +420,9 @@ void TuneActivity::requestFeedRate()
         {
             if(response.status_code() < 200 || response.status_code() > 299)
             {
-                lblStatus->set_text( Glib::ustring::compose( "Error: %1\n%2", response.status_code(), response.reason_phrase() ) );
+                std::lock_guard<std::mutex> lock( errorStatusMutex );
+                errorStatus = Glib::ustring::compose( "Error: %1\n%2", response.status_code(), response.reason_phrase() );
+                statusDispatcher.emit();
                 return;
             }
             lblFeed->set_text( Glib::ustring::compose( "%1%%", feedRate ) );
@@ -425,9 +433,9 @@ void TuneActivity::requestFeedRate()
                     auto holder = previous_task._GetImpl()->_GetExceptionHolder();
                     holder->_RethrowUserException();
                 } catch (std::exception& e) {
-                    lblStatus->set_text(
-                        Glib::ustring::compose( "Error: %1", e.what())
-                    );
+                    std::lock_guard<std::mutex> lock( errorStatusMutex );
+                    errorStatus = Glib::ustring::compose( "Error: %1", e.what());
+                    statusDispatcher.emit();
                     std::cerr << "Exception: " << e.what() << std::endl;
                 }
             }
@@ -461,6 +469,9 @@ void TuneActivity::loadFilament()
         {
             if(response.status_code() < 200 || response.status_code() > 299)
             {
+                std::lock_guard<std::mutex> lock( errorStatusMutex );
+                errorStatus = Glib::ustring::compose("Error: %1\n%2", response.status_code(), response.reason_phrase());
+                statusDispatcher.emit();
                 lblStatus->set_text(Glib::ustring::compose("Error: %1\n%2", response.status_code(), response.reason_phrase()));
                 return;
             }
@@ -471,9 +482,9 @@ void TuneActivity::loadFilament()
 					auto holder = previous_task._GetImpl()->_GetExceptionHolder();
 					holder->_RethrowUserException();
 				} catch (std::exception& e) {
-					lblStatus->set_text(
-						Glib::ustring::compose( "Error: %1", e.what())
-					);
+					std::lock_guard<std::mutex> lock( errorStatusMutex );
+                    errorStatus = Glib::ustring::compose( "Error: %1", e.what());
+                    statusDispatcher.emit();
 					std::cerr << "Exception: " << e.what() << std::endl;
 				}
 			}
@@ -499,7 +510,9 @@ void TuneActivity::unloadFilament()
         {
             if(response.status_code() < 200 || response.status_code() > 299)
             {
-                lblStatus->set_text(Glib::ustring::compose("Error: %1\n%2", response.status_code(), response.reason_phrase()));
+                std::lock_guard<std::mutex> lock( errorStatusMutex );
+                errorStatus = Glib::ustring::compose("Error: %1\n%2", response.status_code(), response.reason_phrase());
+                statusDispatcher.emit();
                 return;
             }
         })
@@ -509,9 +522,9 @@ void TuneActivity::unloadFilament()
 					auto holder = previous_task._GetImpl()->_GetExceptionHolder();
 					holder->_RethrowUserException();
 				} catch (std::exception& e) {
-					lblStatus->set_text(
-						Glib::ustring::compose( "Error: %1", e.what())
-					);
+					std::lock_guard<std::mutex> lock( errorStatusMutex );
+                    errorStatus = Glib::ustring::compose( "Error: %1", e.what());
+                    statusDispatcher.emit();
 					std::cerr << "Exception: " << e.what() << std::endl;
 				}
 			}
@@ -537,7 +550,9 @@ void TuneActivity::swapFilament()
         {
             if(response.status_code() < 200 || response.status_code() > 299)
             {
-                lblStatus->set_text(Glib::ustring::compose("Error: %1\n%2", response.status_code(), response.reason_phrase()));
+                std::lock_guard<std::mutex> lock( errorStatusMutex );
+                errorStatus = Glib::ustring::compose("Error: %1\n%2", response.status_code(), response.reason_phrase());
+                statusDispatcher.emit();
                 return;
             }
         })
@@ -547,13 +562,19 @@ void TuneActivity::swapFilament()
 					auto holder = previous_task._GetImpl()->_GetExceptionHolder();
 					holder->_RethrowUserException();
 				} catch (std::exception& e) {
-					lblStatus->set_text(
-						Glib::ustring::compose( "Error: %1", e.what())
-					);
+					std::lock_guard<std::mutex> lock( errorStatusMutex );
+                    errorStatus = Glib::ustring::compose( "Error: %1", e.what());
+                    statusDispatcher.emit();
 					std::cerr << "Exception: " << e.what() << std::endl;
 				}
 			}
 		});
+}
+
+void TuneActivity::errorStatusUpdate()
+{
+    std::lock_guard<std::mutex> lock( errorStatusMutex );
+    lblStatus->set_text( errorStatus );
 }
 
 TuneActivity::~TuneActivity()

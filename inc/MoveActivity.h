@@ -5,6 +5,7 @@
 #include <gtkmm.h>
 #include <iomanip>
 #include <cpprest/http_client.h>
+#include <mutex>
 #include "Activity.h"
 #include "TuneActivity.h"
 #include "Config.h"
@@ -24,8 +25,12 @@ private:
     Gtk::Button *btnZUp;
     Gtk::Button *btnZDown;
     Gtk::Button *btnZHome;
+    Gtk::Label *lblStatus;
     int incrementStep;
     Activity *tuneActivity;
+    Glib::Dispatcher statusDispatcher;
+    std::string errorStatus;
+    std::mutex errorStatusMutex;
 public:
     MoveActivity(Activity *parent);
     void show();
@@ -43,6 +48,7 @@ public:
     void onBtnZUp();
     void onBtnZDown();
     void onBtnZHome();
+    void errorStatusUpdate();
     ~MoveActivity();
 };
 

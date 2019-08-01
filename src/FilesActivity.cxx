@@ -31,6 +31,7 @@ FilesActivity::FilesActivity(Activity *parent):
     btnBack->signal_clicked().connect( sigc::mem_fun(this, &FilesActivity::backClicked) );
     showStatusDispatcher.connect( sigc::mem_fun( this, &FilesActivity::switchToStatus ) );
     populateListDispatcher.connect( sigc::mem_fun( this, &FilesActivity::populateList ) );
+    statusDispatcher.connect( sigc::mem_fun( this, &FilesActivity::errorStatusUpdate ) );
     btnScrollUp->signal_clicked().connect( sigc::mem_fun( this, &FilesActivity::onScrollUp ) );
     btnScrollDown->signal_clicked().connect( sigc::mem_fun( this, &FilesActivity::onScrollDown ) );
     btnScrollTop->signal_clicked().connect( sigc::mem_fun( this, &FilesActivity::onScrollTop ) );
@@ -110,7 +111,9 @@ bool FilesActivity::listItemClicked( GdkEventButton* button_event, int element )
             {
                 std::cerr << "FilesActivity::listItemClicked error: " << 
                     Glib::ustring::compose("Error: %1\n%2", response.status_code(), response.reason_phrase()) << std::endl;
-                //lblStatus->set_text(Glib::ustring::compose("Error: %1\n%2", response.status_code(), response.reason_phrase()));
+                std::lock_guard<std::mutex> lock( errorStatusMutex );
+                errorStatus = Glib::ustring::compose("Error: %1\n%2", response.status_code(), response.reason_phrase());
+                statusDispatcher.emit();
                 return;
             }
             showStatusDispatcher.emit();
@@ -121,9 +124,9 @@ bool FilesActivity::listItemClicked( GdkEventButton* button_event, int element )
                     auto holder = previous_task._GetImpl()->_GetExceptionHolder();
                     holder->_RethrowUserException();
                 } catch (std::exception& e) {
-                    /*lblStatus->set_text(
-                        Glib::ustring::compose( "Error: %1", e.what())
-                    );*/
+                    std::lock_guard<std::mutex> lock( errorStatusMutex );
+                    errorStatus = Glib::ustring::compose( "Error: %1", e.what());
+                    statusDispatcher.emit();
                     std::cerr << "Exception: " << e.what() << std::endl;
                 }
             }
@@ -221,9 +224,9 @@ void FilesActivity::refreshData()
             {
                 std::cerr << "FilesActivity::listItemClicked error: " << 
                     Glib::ustring::compose("Error: %1\n%2", response.status_code(), response.reason_phrase()) << std::endl;
-                /*lblStatus->set_text(
-                    Glib::ustring::compose( "Connection error: %1\n%2", response.status_code(), response.reason_phrase())
-                );*/
+                std::lock_guard<std::mutex> lock( errorStatusMutex );
+                errorStatus = Glib::ustring::compose("Error: %1\n%2", response.status_code(), response.reason_phrase());
+                statusDispatcher.emit();
                 return;
             }
             auto json = response.extract_json().get();
@@ -237,9 +240,9 @@ void FilesActivity::refreshData()
                     auto holder = previous_task._GetImpl()->_GetExceptionHolder();
                     holder->_RethrowUserException();
                 } catch (std::exception& e) {
-                    /*lblStatus->set_text(
-                        Glib::ustring::compose( "Error: %1", e.what())
-                    );*/
+                    std::lock_guard<std::mutex> lock( errorStatusMutex );
+                    errorStatus = Glib::ustring::compose( "Error: %1", e.what());
+                    statusDispatcher.emit();
                     std::cerr << "Exception: " << e.what() << std::endl;
                 }
             }
@@ -272,6 +275,11 @@ void FilesActivity::onScrollTop()
     populateList();
 }
 
+void FilesActivity::errorStatusUpdate()
+{
+    std::lock_guard<std::mutex> lock( errorStatusMutex );
+    lblStatus->set_text( errorStatus );
+}
 
 FilesActivity::~FilesActivity()
 {

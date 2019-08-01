@@ -14,6 +14,10 @@ private:
     Gtk::Window *window;
     Gtk::Button *btnBack;
     Gtk::Image *imageFrame;
+    Gtk::Label *lblStatus;
+    Glib::Dispatcher statusDispatcher;
+    std::string errorStatus;
+    std::mutex errorStatusMutex;
 public:
     WebcamActivity(Activity *parent);
     void show();
@@ -22,6 +26,7 @@ public:
     bool windowDestroyed( GdkEventAny* any_event );
     void backClicked();
     void loadFrame();
+    void errorStatusUpdate();
     ~WebcamActivity();
 };
 

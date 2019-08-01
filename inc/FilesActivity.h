@@ -6,6 +6,7 @@
 #include <iomanip>
 #include <list>
 #include <cpprest/http_client.h>
+#include <mutex>
 #include "Activity.h"
 #include "StatusActivity.h"
 #include "Config.h"
@@ -39,6 +40,9 @@ private:
     void parseFiles( web::json::value files);
     void insertInOrder(FileEntry entry);
     void switchToStatus();
+    Glib::Dispatcher statusDispatcher;
+    std::string errorStatus;
+    std::mutex errorStatusMutex;
 public:
     FilesActivity(Activity *parent);
     void show();
@@ -52,6 +56,7 @@ public:
     void onScrollUp();
     void onScrollDown();
     void onScrollTop();
+    void errorStatusUpdate();
     ~FilesActivity();
 };
 

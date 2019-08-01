@@ -23,6 +23,7 @@ MoveActivity::MoveActivity(Activity *parent):
     builder->get_widget( "btnZUp", btnZUp );
     builder->get_widget( "btnZDown", btnZDown );
     builder->get_widget( "btnZHome", btnZHome );
+    builder->get_widget( "lblStatus", lblStatus );
 
     if( !validWidget( window, "windowStatus missing from moveWindow.glade" ) ) return;
     if( !validWidget( btnBack, "btnBack missing from moveWindow.glade" ) ) return;
@@ -36,6 +37,7 @@ MoveActivity::MoveActivity(Activity *parent):
     if( !validWidget( btnZUp, "btnZUp missing from moveWindow.glade" ) ) return;
     if( !validWidget( btnZDown, "btnZDown missing from moveWindow.glade" ) ) return;
     if( !validWidget( btnZHome, "btnZHome missing from moveWindow.glade" ) ) return;
+    if( !validWidget( lblStatus, "btnZHome missing from moveWindow.glade" ) ) return;
 
     window->signal_delete_event().connect (sigc::mem_fun(this, &MoveActivity::windowDestroyed) );
     window->set_default_size( Config::i()->getDisplayWidth(), Config::i()->getDisplayHeight() );
@@ -51,6 +53,7 @@ MoveActivity::MoveActivity(Activity *parent):
     btnZUp->signal_clicked().connect( sigc::mem_fun( this, &MoveActivity::onBtnZUp) );
     btnZDown->signal_clicked().connect( sigc::mem_fun( this, &MoveActivity::onBtnZDown) );
     btnZHome->signal_clicked().connect( sigc::mem_fun( this, &MoveActivity::onBtnZHome) );
+    statusDispatcher.connect( sigc::mem_fun( this, &MoveActivity::errorStatusUpdate ) );
     onBtnIncrement();
 }
 
@@ -133,7 +136,9 @@ void MoveActivity::onBtnXLeft()
         {
             if(response.status_code() < 200 || response.status_code() > 299)
             {
-                /*lblStatus->set_text(Glib::ustring::compose("Error: %1\n%2", response.status_code(), response.reason_phrase()));*/
+                std::lock_guard<std::mutex> lock( errorStatusMutex );
+                errorStatus = Glib::ustring::compose("Error: %1\n%2", response.status_code(), response.reason_phrase());
+                statusDispatcher.emit();
                 std::cerr << "MoveActivity::onBtnXLeft error: " << 
                     Glib::ustring::compose("Error: %1\n%2", response.status_code(), response.reason_phrase()) << std::endl;
                 return;
@@ -145,9 +150,9 @@ void MoveActivity::onBtnXLeft()
 					auto holder = previous_task._GetImpl()->_GetExceptionHolder();
 					holder->_RethrowUserException();
 				} catch (std::exception& e) {
-					/*lblStatus->set_text(
-						Glib::ustring::compose( "Error: %1", e.what())
-					);*/
+                    std::lock_guard<std::mutex> lock( errorStatusMutex );
+                    errorStatus = Glib::ustring::compose( "Error: %1", e.what());
+                    statusDispatcher.emit();
 					std::cerr << "Exception: " << e.what() << std::endl;
 				}
 			}
@@ -174,7 +179,9 @@ void MoveActivity::onBtnXRight()
         {
             if(response.status_code() < 200 || response.status_code() > 299)
             {
-                /*lblStatus->set_text(Glib::ustring::compose("Error: %1\n%2", response.status_code(), response.reason_phrase()));*/
+                std::lock_guard<std::mutex> lock( errorStatusMutex );
+                errorStatus = Glib::ustring::compose("Error: %1\n%2", response.status_code(), response.reason_phrase());
+                statusDispatcher.emit();
                 std::cerr << "MoveActivity::onBtnXLeft error: " << 
                     Glib::ustring::compose("Error: %1\n%2", response.status_code(), response.reason_phrase()) << std::endl;
                 return;
@@ -186,9 +193,9 @@ void MoveActivity::onBtnXRight()
 					auto holder = previous_task._GetImpl()->_GetExceptionHolder();
 					holder->_RethrowUserException();
 				} catch (std::exception& e) {
-					/*lblStatus->set_text(
-						Glib::ustring::compose( "Error: %1", e.what())
-					);*/
+                    std::lock_guard<std::mutex> lock( errorStatusMutex );
+                    errorStatus = Glib::ustring::compose( "Error: %1", e.what());
+                    statusDispatcher.emit();
 					std::cerr << "Exception: " << e.what() << std::endl;
 				}
 			}
@@ -215,7 +222,9 @@ void MoveActivity::onBtnYBack()
         {
             if(response.status_code() < 200 || response.status_code() > 299)
             {
-                /*lblStatus->set_text(Glib::ustring::compose("Error: %1\n%2", response.status_code(), response.reason_phrase()));*/
+                std::lock_guard<std::mutex> lock( errorStatusMutex );
+                errorStatus = Glib::ustring::compose("Error: %1\n%2", response.status_code(), response.reason_phrase());
+                statusDispatcher.emit();
                 std::cerr << "MoveActivity::onBtnXLeft error: " << 
                     Glib::ustring::compose("Error: %1\n%2", response.status_code(), response.reason_phrase()) << std::endl;
                 return;
@@ -227,9 +236,9 @@ void MoveActivity::onBtnYBack()
 					auto holder = previous_task._GetImpl()->_GetExceptionHolder();
 					holder->_RethrowUserException();
 				} catch (std::exception& e) {
-					/*lblStatus->set_text(
-						Glib::ustring::compose( "Error: %1", e.what())
-					);*/
+                    std::lock_guard<std::mutex> lock( errorStatusMutex );
+                    errorStatus = Glib::ustring::compose( "Error: %1", e.what());
+                    statusDispatcher.emit();
 					std::cerr << "Exception: " << e.what() << std::endl;
 				}
 			}
@@ -256,7 +265,9 @@ void MoveActivity::onBtnYForward()
         {
             if(response.status_code() < 200 || response.status_code() > 299)
             {
-                /*lblStatus->set_text(Glib::ustring::compose("Error: %1\n%2", response.status_code(), response.reason_phrase()));*/
+                std::lock_guard<std::mutex> lock( errorStatusMutex );
+                errorStatus =Glib::ustring::compose("Error: %1\n%2", response.status_code(), response.reason_phrase());
+                statusDispatcher.emit();
                 std::cerr << "MoveActivity::onBtnXLeft error: " << 
                     Glib::ustring::compose("Error: %1\n%2", response.status_code(), response.reason_phrase()) << std::endl;
                 return;
@@ -268,9 +279,9 @@ void MoveActivity::onBtnYForward()
 					auto holder = previous_task._GetImpl()->_GetExceptionHolder();
 					holder->_RethrowUserException();
 				} catch (std::exception& e) {
-					/*lblStatus->set_text(
-						Glib::ustring::compose( "Error: %1", e.what())
-					);*/
+                    std::lock_guard<std::mutex> lock( errorStatusMutex );
+                    errorStatus = Glib::ustring::compose( "Error: %1", e.what());
+                    statusDispatcher.emit();
 					std::cerr << "Exception: " << e.what() << std::endl;
 				}
 			}
@@ -296,7 +307,9 @@ void MoveActivity::onBtnXYHome()
         {
             if(response.status_code() < 200 || response.status_code() > 299)
             {
-                /*lblStatus->set_text(Glib::ustring::compose("Error: %1\n%2", response.status_code(), response.reason_phrase()));*/
+                std::lock_guard<std::mutex> lock( errorStatusMutex );
+                errorStatus = Glib::ustring::compose("Error: %1\n%2", response.status_code(), response.reason_phrase());
+                statusDispatcher.emit();
                 std::cerr << "MoveActivity::onBtnXLeft error: " << 
                     Glib::ustring::compose("Error: %1\n%2", response.status_code(), response.reason_phrase()) << std::endl;
                 return;
@@ -308,9 +321,9 @@ void MoveActivity::onBtnXYHome()
 					auto holder = previous_task._GetImpl()->_GetExceptionHolder();
 					holder->_RethrowUserException();
 				} catch (std::exception& e) {
-					/*lblStatus->set_text(
-						Glib::ustring::compose( "Error: %1", e.what())
-					);*/
+                    std::lock_guard<std::mutex> lock( errorStatusMutex );
+                    errorStatus = Glib::ustring::compose( "Error: %1", e.what());
+                    statusDispatcher.emit();
 					std::cerr << "Exception: " << e.what() << std::endl;
 				}
 			}
@@ -337,6 +350,9 @@ void MoveActivity::onBtnZUp()
         {
             if(response.status_code() < 200 || response.status_code() > 299)
             {
+                std::lock_guard<std::mutex> lock( errorStatusMutex );
+                errorStatus = Glib::ustring::compose("Error: %1\n%2", response.status_code(), response.reason_phrase());
+                statusDispatcher.emit();
                 /*lblStatus->set_text(Glib::ustring::compose("Error: %1\n%2", response.status_code(), response.reason_phrase()));*/
                 std::cerr << "MoveActivity::onBtnXLeft error: " << 
                     Glib::ustring::compose("Error: %1\n%2", response.status_code(), response.reason_phrase()) << std::endl;
@@ -349,9 +365,9 @@ void MoveActivity::onBtnZUp()
 					auto holder = previous_task._GetImpl()->_GetExceptionHolder();
 					holder->_RethrowUserException();
 				} catch (std::exception& e) {
-					/*lblStatus->set_text(
-						Glib::ustring::compose( "Error: %1", e.what())
-					);*/
+                    std::lock_guard<std::mutex> lock( errorStatusMutex );
+                    errorStatus = Glib::ustring::compose( "Error: %1", e.what());
+                    statusDispatcher.emit();
 					std::cerr << "Exception: " << e.what() << std::endl;
 				}
 			}
@@ -378,7 +394,9 @@ void MoveActivity::onBtnZDown()
         {
             if(response.status_code() < 200 || response.status_code() > 299)
             {
-                /*lblStatus->set_text(Glib::ustring::compose("Error: %1\n%2", response.status_code(), response.reason_phrase()));*/
+                std::lock_guard<std::mutex> lock( errorStatusMutex );
+                errorStatus =Glib::ustring::compose("Error: %1\n%2", response.status_code(), response.reason_phrase());
+                statusDispatcher.emit();
                 std::cerr << "MoveActivity::onBtnXLeft error: " << 
                     Glib::ustring::compose("Error: %1\n%2", response.status_code(), response.reason_phrase()) << std::endl;
                 return;
@@ -390,9 +408,9 @@ void MoveActivity::onBtnZDown()
 					auto holder = previous_task._GetImpl()->_GetExceptionHolder();
 					holder->_RethrowUserException();
 				} catch (std::exception& e) {
-					/*lblStatus->set_text(
-						Glib::ustring::compose( "Error: %1", e.what())
-					);*/
+                    std::lock_guard<std::mutex> lock( errorStatusMutex );
+                    errorStatus = Glib::ustring::compose( "Error: %1", e.what());
+                    statusDispatcher.emit();
 					std::cerr << "Exception: " << e.what() << std::endl;
 				}
 			}
@@ -418,7 +436,9 @@ void MoveActivity::onBtnZHome()
         {
             if(response.status_code() < 200 || response.status_code() > 299)
             {
-                /*lblStatus->set_text(Glib::ustring::compose("Error: %1\n%2", response.status_code(), response.reason_phrase()));*/
+                std::lock_guard<std::mutex> lock( errorStatusMutex );
+                errorStatus = Glib::ustring::compose("Error: %1\n%2", response.status_code(), response.reason_phrase());
+                statusDispatcher.emit();
                 std::cerr << "MoveActivity::onBtnXLeft error: " << 
                     Glib::ustring::compose("Error: %1\n%2", response.status_code(), response.reason_phrase()) << std::endl;
                 return;
@@ -430,15 +450,20 @@ void MoveActivity::onBtnZHome()
 					auto holder = previous_task._GetImpl()->_GetExceptionHolder();
 					holder->_RethrowUserException();
 				} catch (std::exception& e) {
-					/*lblStatus->set_text(
-						Glib::ustring::compose( "Error: %1", e.what())
-					);*/
+                    std::lock_guard<std::mutex> lock( errorStatusMutex );
+                    errorStatus = Glib::ustring::compose( "Error: %1", e.what());
+                    statusDispatcher.emit();
 					std::cerr << "Exception: " << e.what() << std::endl;
 				}
 			}
 		});
 }
 
+void MoveActivity::errorStatusUpdate()
+{
+    std::lock_guard<std::mutex> lock( errorStatusMutex );
+    lblStatus->set_text( errorStatus );
+}
 
 MoveActivity::~MoveActivity()
 {
