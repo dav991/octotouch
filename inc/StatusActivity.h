@@ -25,16 +25,18 @@ private:
     Gtk::Label *lblEstimatePrintTime;
     std::string estimatePrintTimeText;
     Gtk::ProgressBar *progressFile;
+    double progressFileValue;
+    std::string progressFileText;
     Gtk::Button *btnPrint;
     Gtk::Button *btnPause;
     Gtk::Button *btnStop;
     Gtk::Button *btnTune;
-    void refreshData();
     sigc::connection periodicTaskConnection;
     Activity *tuneActivity;
-    Glib::Dispatcher statusDispatcher;
-    std::string errorStatus;
-    std::mutex errorStatusMutex;
+    Glib::Dispatcher refreshDispatcher;
+    std::mutex uiMutex;
+    void loadDataToUI();
+    void refreshData();
 public:
     StatusActivity(Activity *parent);
     void show();
@@ -47,7 +49,6 @@ public:
     void pausePrint();
     void stopPrint();
     void tunePrint();
-    void errorStatusUpdate();
     ~StatusActivity();
 };
 

@@ -3,7 +3,14 @@
 
 
 StatusActivity::StatusActivity(Activity *parent): 
-    window(nullptr)
+    window(nullptr),
+    fileText("File not selected"),
+	statusText("Loading..."),
+	printTimeText("Time: -:--"),
+	printTimeLeftText("Left: -:--"),
+	estimatePrintTimeText("Total: -:--"),
+	progressFileValue(0.),
+	progressFileText("0.00%")
 {
     this->parent = parent;
     tuneActivity = new TuneActivity(this);
@@ -41,7 +48,7 @@ StatusActivity::StatusActivity(Activity *parent):
     btnPause->signal_clicked().connect( sigc::mem_fun(this, &StatusActivity::pausePrint) );
     btnStop->signal_clicked().connect( sigc::mem_fun(this, &StatusActivity::stopPrint) );
     btnTune->signal_clicked().connect( sigc::mem_fun(this, &StatusActivity::tunePrint) );
-    statusDispatcher.connect( sigc::mem_fun( this, &StatusActivity::errorStatusUpdate ) );
+    refreshDispatcher.connect( sigc::mem_fun( this, &StatusActivity::loadDataToUI ) );
 }
 
 void StatusActivity::show()
@@ -63,81 +70,82 @@ void StatusActivity::refreshData()
         {
             if( response.status_code() < 200 || response.status_code() > 299 )
             {
-                std::lock_guard<std::mutex> lock( errorStatusMutex );
-                errorStatus = Glib::ustring::compose( "Connection error: %1\n%2", response.status_code(), response.reason_phrase());
-                statusDispatcher.emit();
+                std::lock_guard<std::mutex> lock( uiMutex );
+                statusText = Glib::ustring::compose( "Connection error: %1\n%2", response.status_code(), response.reason_phrase());
+                refreshDispatcher.emit();
                 return;
             }
             auto json = response.extract_json().get();
             //lblFile update
             if( json["job"]["file"]["name"].is_null() )
             {
-                lblFile->set_text( "File not selected" );
+            	fileText = "File not selected";
             }
             else
             {
-                lblFile->set_text(json["job"]["file"]["name"].as_string());
+                fileText = json["job"]["file"]["name"].as_string();
             }
             //lblStatus update
             if( json["state"].is_null() )
             {
-                lblStatus->set_text( "Error retriving status" );
+                statusText = "Error retriving status" ;
             }
             else
             {
-                lblStatus->set_text( Glib::ustring::compose( "Status: %1", json["state"].as_string() ) );
+                statusText = Glib::ustring::compose( "Status: %1", json["state"].as_string() );
             }
             
             //lblPrintTime update
             int printTime = 0;
             if( json["progress"]["printTime"].is_null() )
             {
-                lblPrintTime->set_text("Time: -:--");
+                printTimeText = "Time: -:--";
             }
             else
             {
                 printTime = json["progress"]["printTime"].as_integer();
-                lblPrintTime->set_text(Glib::ustring::compose("Time: %1:%2",
+                printTimeText = Glib::ustring::compose("Time: %1:%2",
                     printTime/3600,
-                    Glib::ustring::format(std::setfill(L'0'), std::setw(2), (printTime%3600)/60) ) );
+                    Glib::ustring::format(std::setfill(L'0'), std::setw(2), (printTime%3600)/60) );
             }
             //lblPrintTimeLeft update
             int printTimeLeft = 0;
             if( json["progress"]["printTimeLeft"].is_null() )
             {
-                lblPrintTimeLeft->set_text("Left: -:--");
+                printTimeLeftText = "Left: -:--";
             }
             else
             {
                 printTimeLeft = json["progress"]["printTimeLeft"].as_integer();
-                lblPrintTimeLeft->set_text(Glib::ustring::compose("Left: %1:%2",
+                printTimeLeftText = Glib::ustring::compose("Left: %1:%2",
                     printTimeLeft/3600,
-                    Glib::ustring::format(std::setfill(L'0'), std::setw(2), (printTimeLeft%3600)/60) ) );
+                    Glib::ustring::format(std::setfill(L'0'), std::setw(2), (printTimeLeft%3600)/60) );
             }
             //lblPrintTimeTotal update
             int printTimeTotal = printTime + printTimeLeft;
             if( printTimeTotal == 0)
             {
-                lblEstimatePrintTime->set_text( "Total: -:--" );
+                estimatePrintTimeText = "Total: -:--" ;
             }
             else
             {
-                lblEstimatePrintTime->set_text( Glib::ustring::compose( "Total: %1:%2",
+                estimatePrintTimeText = Glib::ustring::compose( "Total: %1:%2",
                     printTimeTotal/3600,
-                    Glib::ustring::format( std::setfill(L'0'), std::setw(2), (printTimeTotal%3600)/60) ) );
+                    Glib::ustring::format( std::setfill(L'0'), std::setw(2), (printTimeTotal%3600)/60) );
             }
             //progressFile update
             if( printTimeTotal == 0 )
             {
-                progressFile->set_fraction( 0. );
-                progressFile->set_text( "0.00%" );
+                progressFileValue = 0.;
+                progressFileText = "0.00%";
             }
             else
             {
                 double progressFileFraction = (double)printTime/(double)printTimeTotal*100.;
-                progressFile->set_fraction( progressFileFraction/100 );
-                progressFile->set_text( Glib::ustring::compose("%1%%", round( progressFileFraction*100.)/100. ) );
+                progressFileValue = progressFileFraction/100;
+                progressFileText = Glib::ustring::compose("%1%%", round( progressFileFraction*100.)/100. );
             }
+            refreshDispatcher.emit();
         })
         .then([=] (pplx::task<void> previous_task) mutable {
             if (previous_task._GetImpl()->_HasUserException()) {
@@ -145,13 +153,25 @@ void StatusActivity::refreshData()
                     auto holder = previous_task._GetImpl()->_GetExceptionHolder();
                     holder->_RethrowUserException();
                 } catch (std::exception& e) {
-                    std::lock_guard<std::mutex> lock( errorStatusMutex );
-                    errorStatus = Glib::ustring::compose( "Error: %1", e.what());
-                    statusDispatcher.emit();
+                    std::lock_guard<std::mutex> lock( uiMutex );
+                    statusText = Glib::ustring::compose( "Error: %1", e.what());
+                    refreshDispatcher.emit();
                     std::cerr << "Exception: " << e.what() << std::endl;
                 }
             }
         });
+}
+
+void StatusActivity::loadDataToUI()
+{
+	std::lock_guard<std::mutex> lock( uiMutex );
+	lblFile->set_text( fileText );
+	lblStatus->set_text( statusText );
+	lblPrintTime->set_text( printTimeText );
+	lblPrintTimeLeft->set_text( printTimeLeftText );
+	lblEstimatePrintTime->set_text( estimatePrintTimeText );
+	progressFile->set_fraction( progressFileValue );
+	progressFile->set_text( progressFileText );
 }
 
 void StatusActivity::hide()
@@ -200,9 +220,9 @@ void StatusActivity::startPrint()
         {
             if(response.status_code() < 200 || response.status_code() > 299)
             {
-                std::lock_guard<std::mutex> lock( errorStatusMutex );
-                errorStatus = Glib::ustring::compose("Error: %1\n%2", response.status_code(), response.reason_phrase());
-                statusDispatcher.emit();
+                std::lock_guard<std::mutex> lock( uiMutex );
+                statusText = Glib::ustring::compose("Error: %1\n%2", response.status_code(), response.reason_phrase());
+                refreshDispatcher.emit();
                 return;
             }
             refreshData();
@@ -213,9 +233,9 @@ void StatusActivity::startPrint()
                     auto holder = previous_task._GetImpl()->_GetExceptionHolder();
                     holder->_RethrowUserException();
                 } catch (std::exception& e) {
-                    std::lock_guard<std::mutex> lock( errorStatusMutex );
-                    errorStatus = Glib::ustring::compose( "Error: %1", e.what());
-                    statusDispatcher.emit();
+                    std::lock_guard<std::mutex> lock( uiMutex );
+                    statusText = Glib::ustring::compose( "Error: %1", e.what());
+                    refreshDispatcher.emit();
                     std::cerr << "Exception: " << e.what() << std::endl;
                 }
             }
@@ -239,9 +259,9 @@ void StatusActivity::pausePrint()
         {
             if(response.status_code() < 200 || response.status_code() > 299)
             {
-                std::lock_guard<std::mutex> lock( errorStatusMutex );
-                errorStatus = Glib::ustring::compose("Error: %1\n%2", response.status_code(), response.reason_phrase());
-                statusDispatcher.emit();
+                std::lock_guard<std::mutex> lock( uiMutex );
+                statusText = Glib::ustring::compose("Error: %1\n%2", response.status_code(), response.reason_phrase());
+                refreshDispatcher.emit();
                 return;
             }
             refreshData();
@@ -252,9 +272,9 @@ void StatusActivity::pausePrint()
                     auto holder = previous_task._GetImpl()->_GetExceptionHolder();
                     holder->_RethrowUserException();
                 } catch (std::exception& e) {
-                    std::lock_guard<std::mutex> lock( errorStatusMutex );
-                    errorStatus = Glib::ustring::compose( "Error: %1", e.what());
-                    statusDispatcher.emit();
+                    std::lock_guard<std::mutex> lock( uiMutex );
+                    statusText = Glib::ustring::compose( "Error: %1", e.what());
+                    refreshDispatcher.emit();
                     std::cerr << "Exception: " << e.what() << std::endl;
                 }
             }
@@ -277,9 +297,9 @@ void StatusActivity::stopPrint()
         {
             if(response.status_code() < 200 || response.status_code() > 299)
             {
-                std::lock_guard<std::mutex> lock( errorStatusMutex );
-                errorStatus = Glib::ustring::compose("Error: %1\n%2", response.status_code(), response.reason_phrase());
-                statusDispatcher.emit();
+                std::lock_guard<std::mutex> lock( uiMutex );
+                statusText = Glib::ustring::compose("Error: %1\n%2", response.status_code(), response.reason_phrase());
+                refreshDispatcher.emit();
                 return;
             }
             refreshData();
@@ -290,9 +310,9 @@ void StatusActivity::stopPrint()
                     auto holder = previous_task._GetImpl()->_GetExceptionHolder();
                     holder->_RethrowUserException();
                 } catch (std::exception& e) {
-                    std::lock_guard<std::mutex> lock( errorStatusMutex );
-                    errorStatus = Glib::ustring::compose( "Error: %1", e.what());
-                    statusDispatcher.emit();
+                    std::lock_guard<std::mutex> lock( uiMutex );
+                    statusText = Glib::ustring::compose( "Error: %1", e.what());
+                    refreshDispatcher.emit();
                     std::cerr << "Exception: " << e.what() << std::endl;
                 }
             }
@@ -305,11 +325,6 @@ void StatusActivity::tunePrint()
     tuneActivity->show();
 }
 
-void StatusActivity::errorStatusUpdate()
-{
-    std::lock_guard<std::mutex> lock( errorStatusMutex );
-    lblStatus->set_text( errorStatus );
-}
 
 StatusActivity::~StatusActivity()
 {
