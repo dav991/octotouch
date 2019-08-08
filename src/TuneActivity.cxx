@@ -30,6 +30,9 @@ TuneActivity::TuneActivity(Activity *parent):
     builder->get_widget( "btnIncreaseFeed", btnIncreaseFeed );
     builder->get_widget( "btnDecreaseFeed", btnDecreaseFeed );
     builder->get_widget( "lblStatus", lblStatus );
+    builder->get_widget( "btnLoad", btnLoad );
+    builder->get_widget( "btnUnload", btnUnload );
+    builder->get_widget( "btnSwap", btnSwap );
 
     if( !validWidget( window, "windowStatus missing from tuneWindow.glade" ) ) return;
     if( !validWidget( btnBack, "btnBack missing from tuneWindow.glade" ) ) return;
@@ -47,6 +50,9 @@ TuneActivity::TuneActivity(Activity *parent):
     if( !validWidget( lblFlow, "lblFlow missing from tuneWindow.glade" ) ) return;
     if( !validWidget( lblFeed, "lblFeed missing from tuneWindow.glade" ) ) return;
     if( !validWidget( lblStatus, "lblStatus missing from tuneWindow.glade" ) ) return;
+    if( !validWidget( btnLoad, "btnLoad missing from tuneWindow.glade" ) ) return;
+    if( !validWidget( btnUnload, "btnUnload missing from tuneWindow.glade" ) ) return;
+    if( !validWidget( btnSwap, "btnSwap missing from tuneWindow.glade" ) ) return;
 
     window->signal_delete_event().connect( sigc::mem_fun( this, &TuneActivity::windowDestroyed ) );
     window->set_default_size( Config::i()->getDisplayWidth(), Config::i()->getDisplayHeight() );
@@ -62,6 +68,9 @@ TuneActivity::TuneActivity(Activity *parent):
     btnIncreaseFeed->signal_clicked().connect( sigc::mem_fun( this, &TuneActivity::incrementFeed) );
     btnDecreaseFeed->signal_clicked().connect( sigc::mem_fun( this, &TuneActivity::decrementFeed) );
     statusDispatcher.connect( sigc::mem_fun( this, &TuneActivity::errorStatusUpdate ) );
+    btnLoad->signal_clicked().connect( sigc::mem_fun( this, &TuneActivity::loadFilament) );
+    btnUnload->signal_clicked().connect( sigc::mem_fun( this, &TuneActivity::unloadFilament) );
+    btnSwap->signal_clicked().connect( sigc::mem_fun( this, &TuneActivity::swapFilament) );
     switchIncrement();
 }
 
@@ -194,7 +203,7 @@ void TuneActivity::switchIncrement()
             incrementValue = 1;
             break;
     }
-    btnTempCycleIncrements->set_label( Glib::ustring::compose("Step: %1\u2103", incrementValue) );
+    btnTempCycleIncrements->set_label( Glib::ustring::compose("Step %1\u2103", incrementValue) );
 }
 
 void TuneActivity::decrementToolTemp()

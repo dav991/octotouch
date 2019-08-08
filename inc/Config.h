@@ -10,6 +10,7 @@ private:
 	Config();
 	std::string host;
 	std::string apiKey;
+    std::string webcamSnapUrl;
 	int displayWidth;
 	int displayHeight;
     std::string resourcesFolder;
@@ -26,6 +27,8 @@ public:
     void setDisplayHeight( int h );
     void setResourcesFolder( std::string path );
     std::string getResourcesFolder();
+    void setWebcamSnapUrl( std::string value );
+    std::string getWebcamSnapUrl( );
 };
 
 

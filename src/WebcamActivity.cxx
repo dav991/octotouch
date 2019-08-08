@@ -25,7 +25,7 @@ WebcamActivity::WebcamActivity(Activity *parent):
 
 void WebcamActivity::loadFrame()
 {
-    web::http::client::http_client api(web::http::uri_builder("https://upload.wikimedia.org/").append_path(U("wikipedia/en/a/a9/Example.jpg")).to_uri());
+    web::http::client::http_client api(web::http::uri_builder(Config::i()->getWebcamSnapUrl()).to_uri());
     web::http::http_request request(web::http::methods::GET);
     api.request(request)
         .then([=](web::http::http_response response)

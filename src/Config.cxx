@@ -70,3 +70,13 @@ std::string Config::getResourcesFolder()
 {
 	return this->resourcesFolder;
 }
+
+void Config::setWebcamSnapUrl( std::string value )
+{
+	this->webcamSnapUrl = value;
+}
+
+std::string Config::getWebcamSnapUrl( )
+{
+	return this->webcamSnapUrl;
+}

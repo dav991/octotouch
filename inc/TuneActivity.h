@@ -24,6 +24,9 @@ private:
     Gtk::Button *btnDecreaseFlow;
     Gtk::Button *btnIncreaseFeed;
     Gtk::Button *btnDecreaseFeed;
+    Gtk::Button *btnLoad;
+    Gtk::Button *btnUnload;
+    Gtk::Button *btnSwap;
     Gtk::Label *lblToolTemp;
     Gtk::Label *lblBedTemp;
     Gtk::Label *lblFlow;

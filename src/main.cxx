@@ -3,7 +3,7 @@
 int main(int argc, char *argv[])
 {
     libconfig::Config cfg;
-    std::string host, apiKey, resourcePath;
+    std::string host, apiKey, resourcePath, webcamSnapUrl;
     int tools, resW, resH;
     try
     {
@@ -11,11 +11,13 @@ int main(int argc, char *argv[])
       const libconfig::Setting& root = cfg.getRoot();
       root["octopi"].lookupValue( "host", host );
       root["octopi"].lookupValue( "apiKey", apiKey );
+      root["octopi"].lookupValue( "webcamSnapUrl", webcamSnapUrl );
       root["display"].lookupValue( "width", resW );
       root["display"].lookupValue( "height", resH );
       root["resources"].lookupValue( "location", resourcePath );
       std::cout << "octopi.host: " << host << std::endl;
       std::cout << "octopi.api : " << apiKey.substr(0,3) << "[...]" << std::endl;
+      std::cout << "octopi.webcamSnapUrl: " << webcamSnapUrl << std::endl;
       std::cout << "display.width: " << resW << std::endl;
       std::cout << "display.height: " << resH << std::endl;
       std::cout << "resources.location: " << resourcePath << std::endl;
@@ -24,6 +26,7 @@ int main(int argc, char *argv[])
       Config::i()->setDisplayWidth( resW );
       Config::i()->setDisplayHeight( resH );
       Config::i()->setResourcesFolder( resourcePath );
+      Config::i()->setWebcamSnapUrl( webcamSnapUrl );
     }
     catch(const libconfig::FileIOException &fioex)
     {
