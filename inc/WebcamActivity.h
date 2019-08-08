@@ -19,6 +19,9 @@ private:
     std::string errorStatus;
     std::mutex errorStatusMutex;
     sigc::connection periodicTaskConnection;
+    Glib::RefPtr<Gdk::Pixbuf> webcamSnap;
+    std::mutex webcamMutex;
+    Glib::Dispatcher webcamDispatcher;
 public:
     WebcamActivity(Activity *parent);
     void show();
@@ -29,6 +32,7 @@ public:
     void loadFrame();
     void errorStatusUpdate();
     bool periodicTask();
+    void loadWebcamImageToUI();
     ~WebcamActivity();
 };
 

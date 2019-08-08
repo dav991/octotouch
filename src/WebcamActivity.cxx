@@ -21,6 +21,7 @@ WebcamActivity::WebcamActivity(Activity *parent):
     window->set_default_size( Config::i()->getDisplayWidth(), Config::i()->getDisplayHeight() );
     btnBack->signal_clicked().connect( sigc::mem_fun(this, &WebcamActivity::backClicked) );
     statusDispatcher.connect( sigc::mem_fun( this, &WebcamActivity::errorStatusUpdate ) );
+    webcamDispatcher.connect( sigc::mem_fun( this, &WebcamActivity::loadWebcamImageToUI ) );
 }
 
 void WebcamActivity::loadFrame()
@@ -41,9 +42,11 @@ void WebcamActivity::loadFrame()
             std::vector< unsigned char > imageBytes = response.extract_vector().get();
             Glib::RefPtr< Gdk::PixbufLoader > pixBufLoader = Gdk::PixbufLoader::create("jpeg");
             pixBufLoader->write( imageBytes.data(), imageBytes.size() );
-            auto size = imageFrame->get_allocation();
-            imageFrame->set( pixBufLoader->get_pixbuf()->scale_simple( size.get_width()-10, size.get_height()-10, Gdk::InterpType::INTERP_BILINEAR ) );
             pixBufLoader->close();
+            auto size = imageFrame->get_allocation();
+            std::lock_guard<std::mutex> lock( webcamMutex );
+            webcamSnap = pixBufLoader->get_pixbuf()->scale_simple( size.get_width()-10, size.get_height()-10, Gdk::InterpType::INTERP_BILINEAR );
+            webcamDispatcher.emit();
         })
         .then([=] (pplx::task<void> previous_task) mutable {
             if (previous_task._GetImpl()->_HasUserException()) {
@@ -64,6 +67,12 @@ bool WebcamActivity::periodicTask()
 {
     loadFrame();
     return true;
+}
+
+void WebcamActivity::loadWebcamImageToUI()
+{
+    std::lock_guard<std::mutex> lock( webcamMutex );
+    imageFrame->set( webcamSnap );
 }
 
 void WebcamActivity::show()

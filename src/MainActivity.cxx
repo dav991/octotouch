@@ -42,7 +42,7 @@ void MainActivity::hide()
 
 int MainActivity::start()
 {
-    app->run(*window);
+    return app->run(*window);
 }
 
 void MainActivity::childActivityHidden( Activity *child )
