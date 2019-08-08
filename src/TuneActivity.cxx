@@ -203,7 +203,7 @@ void TuneActivity::switchIncrement()
             incrementValue = 1;
             break;
     }
-    btnTempCycleIncrements->set_label( Glib::ustring::compose("Step %1\u2103", incrementValue) );
+    btnTempCycleIncrements->set_label( Glib::ustring::compose("Stp %1\u2103", incrementValue) );
 }
 
 void TuneActivity::decrementToolTemp()

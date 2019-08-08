@@ -229,7 +229,7 @@
             </child>
             <child>
               <object class="GtkButton" id="btnTempCycleIncrements">
-                <property name="label" translatable="yes">Step 1℃</property>
+                <property name="label" translatable="yes">Stp 1℃</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
