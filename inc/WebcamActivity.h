@@ -18,6 +18,7 @@ private:
     Glib::Dispatcher statusDispatcher;
     std::string errorStatus;
     std::mutex errorStatusMutex;
+    sigc::connection periodicTaskConnection;
 public:
     WebcamActivity(Activity *parent);
     void show();
@@ -27,6 +28,7 @@ public:
     void backClicked();
     void loadFrame();
     void errorStatusUpdate();
+    bool periodicTask();
     ~WebcamActivity();
 };
 

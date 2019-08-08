@@ -41,33 +41,41 @@ void WebcamActivity::loadFrame()
             std::vector< unsigned char > imageBytes = response.extract_vector().get();
             Glib::RefPtr< Gdk::PixbufLoader > pixBufLoader = Gdk::PixbufLoader::create("jpeg");
             pixBufLoader->write( imageBytes.data(), imageBytes.size() );
-            imageFrame->set( pixBufLoader->get_pixbuf() );
+            auto size = imageFrame->get_allocation();
+            imageFrame->set( pixBufLoader->get_pixbuf()->scale_simple( size.get_width()-10, size.get_height()-10, Gdk::InterpType::INTERP_BILINEAR ) );
             pixBufLoader->close();
         })
         .then([=] (pplx::task<void> previous_task) mutable {
-			if (previous_task._GetImpl()->_HasUserException()) {
-				try {
-					auto holder = previous_task._GetImpl()->_GetExceptionHolder();
-					holder->_RethrowUserException();
-				} catch (std::exception& e) {
-					std::lock_guard<std::mutex> lock( errorStatusMutex );
+            if (previous_task._GetImpl()->_HasUserException()) {
+                try {
+                    auto holder = previous_task._GetImpl()->_GetExceptionHolder();
+                    holder->_RethrowUserException();
+                } catch (std::exception& e) {
+                    std::lock_guard<std::mutex> lock( errorStatusMutex );
                     errorStatus = Glib::ustring::compose( "Error: %1", e.what());
                     statusDispatcher.emit();
-					std::cerr << "Exception: " << e.what() << std::endl;
-				}
-			}
-		});
+                    std::cerr << "Exception: " << e.what() << std::endl;
+                }
+            }
+        });
+}
+
+bool WebcamActivity::periodicTask()
+{
+    loadFrame();
+    return true;
 }
 
 void WebcamActivity::show()
 {
     window->show();
-    loadFrame();
+    periodicTaskConnection = Glib::signal_timeout().connect_seconds(sigc::mem_fun(*this, &WebcamActivity::periodicTask), 1);
 }
 
 void WebcamActivity::hide()
 {
     window->hide();
+    periodicTaskConnection.disconnect();
 }
 
 void WebcamActivity::childActivityHidden( Activity *child )
