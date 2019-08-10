@@ -39,6 +39,7 @@ int main(int argc, char *argv[])
                   << " - " << pex.getError() << std::endl;
         return(2);
     }
+    crossplat::threadpool::initialize_with_threads(2);
     auto app = Gtk::Application::create(argc, argv,
       "com.intshift.octolcd");
 
