@@ -1,0 +1,13 @@
+[Unit]
+Description=Octotouch
+After=systemd-user-sessions.service plymouth-quit.service
+
+[Service]
+ExecStart=/usr/bin/xinit /opt/octotouch/octotouch -- :0 -nolisten tcp -nocursor
+Restart=always
+RestartSec=1s
+TimeoutStopSec=5s
+IgnoreSIGPIPE=no
+
+[Install]
+WantedBy=graphical.target
