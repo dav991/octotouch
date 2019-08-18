@@ -3,6 +3,7 @@ Description=Octotouch
 After=systemd-user-sessions.service plymouth-quit.service
 
 [Service]
+WorkingDirectory= /opt/octotouch
 ExecStart=/usr/bin/xinit /opt/octotouch/octotouch -- :0 -nolisten tcp -nocursor
 Restart=always
 RestartSec=1s
