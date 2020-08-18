@@ -11,6 +11,7 @@ Restart=always
 RestartSec=1s
 TimeoutStopSec=5s
 IgnoreSIGPIPE=no
+User=root
 
 [Install]
 WantedBy=multi-user.target
