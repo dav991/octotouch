@@ -1,6 +1,8 @@
 # octotouch
+
+This is a work in progress, I do not recommend running this interface on the same raspberry pi that is running octoprint.
+
 This is a touch interface for octoprint. It is writen in C++ with GTK interface.
-It is intended to run alongside octoprint on the same raspberry pi, but provide a touch interface.
 
 The build instructions are in the wiki.
 
